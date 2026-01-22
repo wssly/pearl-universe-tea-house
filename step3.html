@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>请选择糖度 - 珍珠宇宙茶饮屋</title>
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        body {
+            padding-bottom: 200px;
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-top: 64px;
+        }
+        .title-img-container {
+            display: flex;
+            align-items: center;
+            margin: 30px 0 5px 0;
+        }
+        .title-top-img {
+            width: 54px;
+            height: 54px;
+            object-fit: contain;
+        }
+        .title-extra-img {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-left: 265px;
+        }
+        .step-title {
+            text-align: left;
+            font-size: 18px;
+            margin: 10px 0 20px 0;
+            color: #333;
+            font-weight: 600;
+        }
+        .prev-btn, .next-btn {
+            min-height: 50px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: none;
+            width: 140px;
+        }
+        .next-btn {
+            background: #6ACDE3;
+            color: white;
+        }
+        .next-btn:disabled {
+            background: #ccc;
+            color: #999;
+            cursor: not-allowed;
+        }
+        .prev-btn {
+            background: white;
+            border: 1px solid #A1CEF8;
+            color: #2A5987;
+        }
+    </style>
+</head>
+<body>
+<!-- 加载弹窗 -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<!-- 提示弹窗 -->
+<div class="toast" id="toast"></div>
+
+
+
+<div class="title-img-container">
+    <img src="images/math/国际时尚_数字3.png" alt="标题上方图片" class="title-top-img" loading="lazy" onerror="this.src='static/images/占位图.png'">
+    <img src="images/math/015_双鱼座.png" alt="附加图标" class="title-extra-img" loading="lazy" onerror="this.src='static/images/占位图.png'">
+</div>
+
+<div class="step-title">请选择糖度 🍬（必选，仅选1种）</div>
+
+<div class="option-grid">
+    <div class="option-item" onclick="selectSugar(this, '无糖')">
+        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="无糖" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>无糖</span>
+    </div>
+    <div class="option-item" onclick="selectSugar(this, '三分甜')">
+        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="三分甜" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>三分甜</span>
+    </div>
+    <div class="option-item" onclick="selectSugar(this, '七分甜')">
+        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="七分甜" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>七分甜</span>
+    </div>
+    <div class="option-item" onclick="selectSugar(this, '全糖')">
+        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="全糖" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>全糖</span>
+    </div>
+</div>
+
+<div class="selected-area">
+    <div class="selected-text" id="selectedText">已选：无</div>
+</div>
+
+<div class="footer-bar">
+    <button class="prev-btn" onclick="navigateTo('step2.html')">上一步</button>
+    <button class="next-btn" id="nextBtn" onclick="goToNextStep()" disabled>下一步</button>
+</div>
+
+<!-- 音效 -->
+<audio id="clickSound" preload="auto" style="display: none;">
+    <source src="audio/click.mp3" type="audio/mpeg">
+</audio>
+
+<!-- 隐私提示 -->
+<div class="privacy-tip">本页面仅在本地存储您的选择信息，不会上传至服务器</div>
+
+<!-- 公共脚本 -->
+<script src="js/storage.js"></script>
+<script src="js/common.js"></script>
+<script src="js/components.js"></script>
+<script src="js/logger.js"></script>
+
+<script>
+    let selectedSugar = "";
+    let selectedBase = "";
+    let selectedToppings = [];
+
+    // 选择糖度
+    function selectSugar(item, name) {
+        document.querySelectorAll(".option-item").forEach(i => i.classList.remove("selected"));
+        item.classList.add("selected");
+        selectedSugar = name;
+        updateSelectedText();
+        document.getElementById("nextBtn").disabled = false;
+    }
+
+    // 更新已选文本
+    function updateSelectedText() {
+        let textParts = [];
+        if (selectedBase) textParts.push(`杯底：${escapeHtml(selectedBase)}`);
+        if (selectedToppings.length > 0) {
+            const safeToppings = selectedToppings.map(t => escapeHtml(t)).join("、");
+            textParts.push(`加料：${safeToppings}`);
+        }
+        if (selectedSugar) textParts.push(`糖度：${escapeHtml(selectedSugar)}`);
+
+        const text = textParts.length > 0 ? textParts.join(" | ") : "已选：无";
+        document.getElementById("selectedText").innerText = text;
+    }
+
+    // 跳转到下一步
+    function goToNextStep() {
+        let drink = Storage.get("customDrink") || {};
+        drink.sugar = selectedSugar;
+        Storage.set("customDrink", drink);
+        navigateTo("step4.html");
+    }
+
+    // 初始化
+    window.addEventListener('DOMContentLoaded', function() {
+        // 兼容Array.includes
+        if (!Array.prototype.includes) {
+            Array.prototype.includes = function(searchElement) {
+                return this.indexOf(searchElement) !== -1;
+            };
+        }
+
+        // 读取已选数据
+        const drink = Storage.get("customDrink");
+        selectedBase = drink?.base || "";
+        selectedToppings = Array.isArray(drink?.toppings) ? drink.toppings : [];
+        selectedSugar = drink?.sugar || "";
+
+        // 恢复选中状态
+        if (selectedSugar) {
+            document.querySelectorAll(".option-item").forEach(item => {
+                if (item.querySelector('span').textContent === selectedSugar) {
+                    item.classList.add("selected");
+                }
+            });
+            document.getElementById("nextBtn").disabled = false;
+        }
+
+        // 更新已选文本
+        updateSelectedText();
+
+        // 绑定音效
+        bindSoundToAllButtons();
+    });
+</script>
+</body>
+</html>

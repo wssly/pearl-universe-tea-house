@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>珍珠宇宙茶饮屋</title>
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 15px;
+            background-image: url('images/drinks/006z57zUgy1hsmoq18vmsj32142ph1ky.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        .start-btn {
+            background: rgba(135, 206, 235, 0.9);
+            color: white;
+            font-size: 18px;
+            min-height: 48px;
+            min-width: 200px;
+            padding: 15px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+<!-- 加载弹窗 -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<!-- 提示弹窗 -->
+<div class="toast" id="toast"></div>
+
+<button class="start-btn" onclick="goToStep1()">开始定制</button>
+
+<!-- 音效 -->
+<audio id="clickSound" preload="auto" style="display: none;">
+    <source src="audio/click.mp3" type="audio/mpeg">
+</audio>
+
+<!-- 隐私提示 -->
+<div class="privacy-tip">本页面仅在本地存储您的选择信息，不会上传至服务器</div>
+
+<!-- 公共脚本 -->
+<script src="js/storage.js"></script>
+<script src="js/common.js"></script>
+<script src="js/components.js"></script>
+<script src="js/logger.js"></script>
+
+<script>
+    // 页面跳转至第一步
+    function goToStep1() {
+        navigateTo('step1.html');
+    }
+
+    // 页面加载完成后绑定音效
+    window.addEventListener('DOMContentLoaded', function() {
+        bindSoundToAllButtons();
+    });
+</script>
+</body>
+</html>

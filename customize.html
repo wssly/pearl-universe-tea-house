@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <!-- 保持和step页面一致的视口标签 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>专属定制 - 珍珠宇宙茶饮屋</title>
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background: linear-gradient(
+                    210deg,
+                    #bae2ee 0%,
+                    #FFFFFF 40%,
+                    #FFFFFF 60%,
+                    #E3F4FA 100%
+            ) fixed;
+            min-height: 100vh;
+            padding: 15px;
+            padding-bottom: 100px;
+            padding-top: 64px;
+            overflow-x: hidden;
+        }
+        .title {
+            text-align: center;
+            font-size: 18px;
+            margin: 15px 0;
+            color: #333;
+            font-weight: 600;
+        }
+        .name-container {
+            margin: 15px auto;
+            width: 100%;
+            max-width: 400px;
+        }
+        .name-label {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .name-count {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+            text-align: right;
+        }
+        .name-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            min-height: 44px;
+        }
+        .canvas-container {
+            margin: 15px auto;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        .canvas-label {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+            text-align: left;
+        }
+        #cupSticker {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: crosshair;
+            width: 100%;
+            height: auto;
+        }
+        .color-selector {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .color-label {
+            font-size: 14px;
+            color: #333;
+            white-space: nowrap;
+        }
+        .color-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid #eee;
+            cursor: pointer;
+            outline: none;
+            padding: 0;
+        }
+        .color-btn.active {
+            border-color: #2c5f2d;
+            box-shadow: 0 0 0 2px rgba(44, 95, 45, 0.3);
+        }
+        .custom-color {
+            width: 40px;
+            height: 30px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            background: transparent;
+            padding: 0;
+        }
+        .canvas-tools {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .tool-btn {
+            padding: 8px 12px;
+            border: 1px solid #2c5f2d;
+            background: white;
+            color: #2c5f2d;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            min-height: 44px;
+            min-width: 80px;
+        }
+        .footer-bar {
+            justify-content: center;
+        }
+        .confirm-btn {
+            background: #6ACDE5;
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            min-height: 48px;
+            min-width: 200px;
+        }
+        .canvas-loading {
+            font-size: 14px;
+            color: #999;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<!-- 加载弹窗 -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<!-- 提示弹窗 -->
+<div class="toast" id="toast"></div>
+
+<!-- 头部导航 -->
+
+
+<div class="title">专属定制 ✨</div>
+
+<div class="name-container">
+    <label class="name-label" for="drinkName">自定义命名：</label>
+    <input type="text" id="drinkName" class="name-input" placeholder="比如：我的专属奶茶" maxlength="10" oninput="updateNameCount()">
+    <div class="name-count" id="nameCount">0/10</div>
+</div>
+
+<div class="canvas-container">
+    <label class="canvas-label" for="cupSticker">定制杯贴（点击绘画）：</label>
+    <canvas id="cupSticker" width="300" height="200"></canvas>
+    <div class="canvas-loading" id="canvasLoading">画板加载中...</div>
+
+    <div class="color-selector">
+        <span class="color-label">画笔颜色：</span>
+        <button class="color-btn active" style="background: #6ACDE5;" onclick="changeColor('#6ACDE5')"></button>
+        <button class="color-btn" style="background: #2c5f2d;" onclick="changeColor('#2c5f2d')"></button>
+        <button class="color-btn" style="background: #e63946;" onclick="changeColor('#e63946')"></button>
+        <button class="color-btn" style="background: #f77f00;" onclick="changeColor('#f77f00')"></button>
+        <button class="color-btn" style="background: #0077b6;" onclick="changeColor('#0077b6')"></button>
+        <button class="color-btn" style="background: #800080;" onclick="changeColor('#800080')"></button>
+        <input type="color" class="custom-color" id="customColor" onchange="changeColor(this.value)">
+    </div>
+
+    <div class="canvas-tools">
+        <button class="tool-btn" onclick="clearCanvas()">清空画板</button>
+        <button class="tool-btn" onclick="saveCanvas()">保存杯贴</button>
+    </div>
+</div>
+
+<div class="footer-bar">
+    <button class="confirm-btn" onclick="confirmCustom()">确定</button>
+</div>
+
+<!-- 音效 -->
+<audio id="clickSound" preload="auto" style="display: none;">
+    <source src="audio/click.mp3" type="audio/mpeg">
+
+</audio>
+    <!-- 公共脚本 -->
+    <script src="js/storage.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/logger.js"></script>
+
+    <script>
+        const canvas = document.getElementById('cupSticker');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let stickerData = "";
+        const baseRatio = canvas.width / canvas.height;
+        let currentColor = '#6ACDE5';
+        const canvasLoading = document.getElementById('canvasLoading');
+
+        // 初始化Canvas
+        function initCanvas() {
+            try {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                canvasLoading.textContent = "";
+            } catch (e) {
+                canvasLoading.textContent = "画板加载失败，请刷新页面";
+                reportError(e, { type: 'canvas_init' });
+            }
+        }
+
+        // 自适应Canvas尺寸
+        function resizeCanvas() {
+            const container = document.querySelector('.canvas-container');
+            if (!container) return;
+            const containerWidth = container.clientWidth;
+            const newWidth = containerWidth;
+            const newHeight = newWidth / baseRatio;
+
+            const tempData = canvas.toDataURL();
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+
+            const img = new Image();
+            img.src = tempData;
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            };
+
+            ctx.strokeStyle = currentColor;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+        }
+
+        // 切换画笔颜色
+        function changeColor(color) {
+            currentColor = color;
+            ctx.strokeStyle = currentColor;
+
+            const colorBtns = document.querySelectorAll('.color-btn');
+            colorBtns.forEach(btn => btn.classList.remove('active'));
+            colorBtns.forEach(btn => {
+                if (btn.style.background === color || (btn.style.background === '' && color === document.getElementById('customColor').value)) {
+                    btn.classList.add('active');
+                }
+            });
+            const customColorEl = document.getElementById('customColor');
+            if (customColorEl) customColorEl.value = color;
+
+            playSound('clickSound');
+        }
+
+        // 更新命名字数统计
+        function updateNameCount() {
+            const drinkName = document.getElementById('drinkName');
+            const nameCount = document.getElementById('nameCount');
+            if (drinkName && nameCount) {
+                nameCount.textContent = `${drinkName.value.length}/10`;
+            }
+        }
+
+        // 获取Canvas坐标
+        function getCanvasPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            let x, y;
+            if (e.type.includes('touch')) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                x = touch.clientX - rect.left;
+                y = touch.clientY - rect.top;
+            } else {
+                x = e.offsetX;
+                y = e.offsetY;
+            }
+            return [x, y];
+        }
+
+        // 清空画板
+        function clearCanvas() {
+            try {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                stickerData = "";
+                playSound('clickSound');
+            } catch (e) {
+                reportError(e, { type: 'canvas_clear' });
+                showToast('清空画板失败，请重试');
+            }
+        }
+
+        // 保存杯贴
+        function saveCanvas() {
+            try {
+                stickerData = canvas.toDataURL('image/png');
+                showToast("杯贴已保存！");
+                playSound('clickSound');
+            } catch (e) {
+                reportError(e, { type: 'canvas_save' });
+                showToast('杯贴保存失败，请重试');
+            }
+        }
+
+        // 确认定制
+        function confirmCustom() {
+            const drinkNameEl = document.getElementById("drinkName");
+            if (!drinkNameEl) return;
+
+            const drinkName = drinkNameEl.value.trim() || "我的专属饮品";
+            let drink = Storage.get("customDrink") || {};
+
+            drink.name = drinkName;
+            drink.sticker = stickerData || canvas.toDataURL('image/png');
+
+            let cart = Storage.get("drinkCart") || [];
+            if (!Array.isArray(cart)) cart = [];
+
+            cart.push(drink);
+            Storage.set("drinkCart", cart);
+            Storage.remove("customDrink");
+
+            playSound('clickSound');
+            navigateTo("cart.html");
+        }
+
+        // 初始化事件监听
+        window.addEventListener('DOMContentLoaded', function() {
+            initCanvas();
+            resizeCanvas();
+            bindSoundToAllButtons();
+            updateNameCount();
+            window.addEventListener('resize', resizeCanvas);
+
+            // 绘画事件
+            canvas.addEventListener('mousedown', (e) => {
+                isDrawing = true;
+                [lastX, lastY] = getCanvasPos(e);
+            });
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDrawing) return;
+                const [x, y] = getCanvasPos(e);
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                [lastX, lastY] = [x, y];
+            });
+            canvas.addEventListener('mouseup', () => isDrawing = false);
+            canvas.addEventListener('mouseout', () => isDrawing = false);
+
+            canvas.addEventListener('touchstart', (e) => {
+                isDrawing = true;
+                [lastX, lastY] = getCanvasPos(e);
+            });
+            canvas.addEventListener('touchmove', (e) => {
+                if (!isDrawing) return;
+                const [x, y] = getCanvasPos(e);
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                [lastX, lastY] = [x, y];
+            });
+            canvas.addEventListener('touchend', () => isDrawing = false);
+        });
+    </script>
+</body>
+</html>

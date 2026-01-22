@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>请选择杯底 - 珍珠宇宙茶饮屋</title>
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        body {
+            padding-bottom: 200px;
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-top: 64px;
+        }
+        .title-img-container {
+            display: flex;
+            align-items: center;
+            margin: 30px 0 5px 0;
+        }
+        .title-top-img {
+            width: 54px;
+            height: 54px;
+            object-fit: contain;
+        }
+        .title-extra-img {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-left: 265px; /* 替代gap，兼容低版本浏览器 */
+        }
+        .step-title {
+            text-align: left;
+            font-size: 18px;
+            margin: 10px 0 20px 0;
+            color: #333;
+            font-weight: 600;
+        }
+        .prev-btn, .next-btn {
+            min-height: 50px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: none;
+            width: 140px;
+        }
+        .next-btn {
+            background: #6ACDE3;
+            color: white;
+        }
+        .next-btn:disabled {
+            background: #ccc !important;
+            color: #999;
+            cursor: not-allowed;
+        }
+        .prev-btn {
+            background: white;
+            border: 1px solid #A1CEF8;
+            color: #2A5987;
+        }
+    </style>
+</head>
+<body>
+<!-- 加载弹窗 -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<!-- 提示弹窗 -->
+<div class="toast" id="toast"></div>
+
+
+
+<div class="title-img-container">
+    <img src="images/math/数字1.png" alt="标题上方图片" class="title-top-img" loading="lazy" onerror="this.src='static/images/占位图.png'">
+    <img src="images/math/015_双鱼座.png" alt="附加图标" class="title-extra-img" loading="lazy" onerror="this.src='static/images/占位图.png'">
+</div>
+
+<div class="step-title">请选择杯底 🧋（必选）</div>
+
+<div class="option-grid">
+    <div class="option-item" onclick="selectOption(this, '奶茶')">
+        <img src="images/categories/006z57zUly1h44h0d1e7vj3301201hdt.jpg" alt="奶茶" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>奶茶</span>
+    </div>
+    <div class="option-item" onclick="selectOption(this, '果茶')">
+        <img src="images/categories/006z57zUly1h44h0dutr1j31xl2wenpd.jpg" alt="果茶" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>果茶</span>
+    </div>
+    <div class="option-item" onclick="selectOption(this, '绿茶')">
+        <img src="images/categories/006z57zUly1hjel8ikn6ej33i72d97wl.jpg" alt="绿茶" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>绿茶</span>
+    </div>
+    <div class="option-item" onclick="selectOption(this, '红茶')">
+        <img src="images/categories/006z57zUly1hji0tb4ifij31b31yn4qp.jpg" alt="红茶" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>红茶</span>
+    </div>
+    <div class="option-item" onclick="selectOption(this, '姜茶')">
+        <img src="images/categories/006z57zUly1hkeep7v7l0j323w35se85.jpg" alt="姜茶" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>姜茶</span>
+    </div>
+    <div class="option-item" onclick="selectOption(this, '美式')">
+        <img src="images/categories/006z57zUly1hkeep06511j31zs2znhdw.jpg" alt="美式" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>美式</span>
+    </div>
+</div>
+
+<div class="selected-area">
+    <div class="selected-text" id="selectedText">已选：无</div>
+</div>
+
+<div class="footer-bar">
+    <button class="prev-btn" onclick="navigateTo('index.html')">返回</button>
+    <button class="next-btn" id="nextBtn" onclick="goToNextStep()" disabled>下一步</button>
+</div>
+
+<!-- 音效 -->
+<audio id="clickSound" preload="auto" style="display: none;">
+    <source src="audio/click.mp3" type="audio/mpeg">
+</audio>
+
+<!-- 隐私提示 -->
+<div class="privacy-tip">本页面仅在本地存储您的选择信息，不会上传至服务器</div>
+
+<!-- 公共脚本 -->
+<script src="js/storage.js"></script>
+<script src="js/common.js"></script>
+<script src="js/components.js"></script>
+<script src="js/logger.js"></script>
+
+<script>
+    let selectedBase = "";
+
+    // 选择杯底
+    function selectOption(item, name) {
+        document.querySelectorAll(".option-item").forEach(i => i.classList.remove("selected"));
+        item.classList.add("selected");
+        selectedBase = name;
+        updateSelectedText();
+        document.getElementById("nextBtn").disabled = false;
+    }
+
+    // 更新已选文本（带XSS防护）
+    function updateSelectedText() {
+        const text = selectedBase ? `杯底：${escapeHtml(selectedBase)}` : "已选：无";
+        document.getElementById("selectedText").innerText = text;
+    }
+
+    // 跳转到下一步
+    function goToNextStep() {
+        let drink = Storage.get("customDrink") || {};
+        drink.base = selectedBase;
+        Storage.set("customDrink", drink);
+        navigateTo("step2.html");
+    }
+
+    // 初始化
+    window.addEventListener('DOMContentLoaded', function() {
+        // 兼容Array.includes
+        if (!Array.prototype.includes) {
+            Array.prototype.includes = function(searchElement) {
+                return this.indexOf(searchElement) !== -1;
+            };
+        }
+
+        // 读取已选数据
+        const drink = Storage.get("customDrink");
+        if (drink?.base) {
+            selectedBase = drink.base;
+            document.querySelectorAll(".option-item").forEach(item => {
+                if (item.querySelector('span').textContent === selectedBase) {
+                    item.classList.add("selected");
+                }
+            });
+            document.getElementById("nextBtn").disabled = false;
+            updateSelectedText();
+        }
+
+        // 绑定音效
+        bindSoundToAllButtons();
+    });
+</script>
+</body>
+</html>

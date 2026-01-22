@@ -1,0 +1,24 @@
+{
+  "name": "pearl-universe-tea",
+  "version": "1.0.0",
+  "description": "珍珠宇宙茶饮屋 - 在线饮品定制网站",
+  "main": "index.html",
+  "scripts": {
+    "start": "live-server --port=3000",
+    "dev": "live-server --port=3000 --watch=.",
+    "preview": "live-server --port=3000 --no-browser",
+    "deploy": "git push origin main"
+  },
+  "keywords": [
+    "茶饮",
+    "定制",
+    "奶茶",
+    "网页",
+    "饮品"
+  ],
+  "author": "lll",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}

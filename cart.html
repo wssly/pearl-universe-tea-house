@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>我的餐车 - 珍珠宇宙茶饮屋</title>
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            padding: 15px;
+            padding-bottom: 200px;
+            padding-top: 64px;
+        }
+        .title {
+            text-align: center;
+            font-size: 18px;
+            margin: 15px 0;
+            color: #333;
+            font-weight: 600;
+        }
+        .cart-empty {
+            text-align: center;
+            font-size: 16px;
+            color: #999;
+            padding: 40px 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin: 0 5px;
+        }
+        .drink-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin: 10px 5px;
+            padding: 15px;
+        }
+        .drink-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .drink-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            margin-right: 10px;
+            background: #f0f5f0;
+            object-fit: cover;
+        }
+        .drink-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .drink-detail {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+        .sticker-btn {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #6ACDE5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            min-height: 40px;
+            margin-right: 8px; /* 新增：和删除按钮拉开间距 */
+        }
+        /* 新增：删除按钮样式 */
+        .delete-btn {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #ff4d4f; /* 红色系，符合删除操作视觉习惯 */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            min-height: 40px;
+        }
+        .footer-bar {
+            padding: 12px 15px;
+            justify-content: center;
+        }
+        .back-btn {
+            background: #6ACDE5;
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            min-height: 48px;
+            min-width: 200px;
+        }
+        .modal {
+            padding: 20px 10px;
+        }
+        .modal-content {
+            max-width: 100%;
+            width: 95%;
+            padding: 15px;
+        }
+        .modal-img {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+        .modal-close {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #6ACDE5;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            min-height: 44px;
+        }
+    </style>
+</head>
+<body>
+<!-- 加载弹窗 -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<!-- 提示弹窗 -->
+<div class="toast" id="toast"></div>
+
+<!-- 头部导航 -->
+<div class="title">我的餐车 🛒</div>
+<div id="cartContainer"></div>
+
+<div class="modal" id="stickerModal">
+    <div class="modal-content">
+        <img id="modalStickerImg" class="modal-img" src="" alt="杯贴">
+        <button class="modal-close" onclick="closeModal()">关闭</button>
+    </div>
+</div>
+
+<div class="footer-bar">
+    <button class="back-btn" onclick="clearDataAndBack()">返回继续定制</button>
+</div>
+
+<!-- 音效：正确闭合，路径无static -->
+<audio id="clickSound" preload="auto" style="display: none;">
+    <source src="audio/click.mp3" type="audio/mpeg">
+</audio>
+
+<!-- 公共脚本 -->
+<script src="js/storage.js"></script>
+<script src="js/common.js"></script>
+<script src="js/components.js"></script>
+<script src="js/logger.js"></script>
+
+<script>
+    // 核心改动：去掉所有路径的static/前缀
+    const drinkImageMap = {
+        "奶茶": "images/categories/006z57zUgy1i5j5sz0986j32mj3xonpg.jpg",
+        "果茶": "images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg",
+        "绿茶": "images/categories/006z57zUly1h44h0bhs68j334022ox6p.jpg",
+        "红茶": "images/categories/006z57zUly1h44h0d1e7vj3301201hdt.jpg",
+        "姜茶": "images/categories/006z57zUly1hjel8ikn6ej33i72d97wl.jpg",
+        "美式": "images/categories/006z57zUly1hji0tb4ifij31b31yn4qp.jpg"
+    };
+    const defaultDrinkImg = "https://via.placeholder.com/70/2c5f2d/ffffff?text=饮品";
+
+    // 渲染购物车
+    function renderCart() {
+        const cart = Storage.get("drinkCart") || [];
+        const container = document.getElementById("cartContainer");
+
+        if (cart.length === 0) {
+            container.innerHTML = '<div class="cart-empty">餐车空空如也～</div>';
+            return;
+        }
+
+        let html = "";
+        cart.forEach((drink, index) => { // 新增index参数，用于删除对应项
+            const detail = `
+                杯底：${drink.base || '未选择'}<br>
+                加料：${drink.toppings && drink.toppings.length > 0 ? drink.toppings.join("、") : '无'}<br>
+                杯型：${drink.cup || '未选择'} | 糖度：${drink.sugar || '未选择'} | 冰度：${drink.ice || '未选择'}
+            `;
+            const drinkImg = drinkImageMap[drink.base] || defaultDrinkImg;
+
+            html += `
+                <div class="drink-card">
+                    <div class="drink-header">
+                        <img class="drink-img" src="${drinkImg}" alt="${drink.name || '我的饮品'}">
+                        <div>
+                            <div class="drink-name">${drink.name || '我的专属饮品'}</div>
+                            <div class="drink-detail">${detail}</div>
+                            <button class="sticker-btn" onclick="showSticker('${drink.sticker}')">查看杯贴</button>
+                            <!-- 新增：删除按钮，绑定deleteDrink函数并传入索引 -->
+                            <button class="delete-btn" onclick="deleteDrink(${index})">删除饮品</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+        bindSoundToAllButtons();
+    }
+
+    // 新增：删除饮品函数
+    function deleteDrink(index) {
+        playSound("clickSound"); // 点击音效，和其他按钮保持一致
+        let cart = Storage.get("drinkCart") || [];
+        // 删除对应索引的饮品
+        cart.splice(index, 1);
+        // 更新本地存储
+        Storage.set("drinkCart", cart);
+        // 提示删除成功
+        showToast("饮品已删除");
+        // 重新渲染购物车
+        renderCart();
+    }
+
+    // 显示杯贴弹窗
+    function showSticker(stickerData) {
+        document.getElementById("modalStickerImg").src = stickerData;
+        document.getElementById("stickerModal").classList.add("show");
+    }
+
+    // 关闭弹窗
+    function closeModal() {
+        document.getElementById("stickerModal").classList.remove("show");
+    }
+
+    // 清空数据并返回
+    function clearDataAndBack() {
+        Storage.remove("customDrink");
+        navigateTo("index.html");
+    }
+
+    // 初始化
+    window.addEventListener('DOMContentLoaded', function() {
+        renderCart();
+        bindSoundToAllButtons();
+    });
+</script>
+</body>
+</html>

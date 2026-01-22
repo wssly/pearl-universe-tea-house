@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>请选择加料 - 珍珠宇宙茶饮屋</title>
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        body {
+            padding-bottom: 200px;
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-top: 64px;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        .title-img-container {
+            display: flex;
+            align-items: center;
+            margin: 30px 0 5px 0;
+        }
+        .title-top-img {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+        }
+        .title-extra-img {
+            width: 54px;
+            height: 54px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-left: 265px;
+        }
+        .step-title {
+            text-align: left;
+            font-size: 18px;
+            margin: 10px 0 20px 0;
+            color: #333;
+            font-weight: 600;
+        }
+        .option-grid {
+            margin-bottom: 20px;
+        }
+        .option-item.selected {
+            transform: scale(1.05);
+            transition: all 0.2s ease;
+        }
+        .prev-btn, .next-btn {
+            min-height: 50px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: none;
+            width: 140px;
+            cursor: pointer;
+        }
+        .next-btn {
+            background: #6ACDE3;
+            color: white;
+        }
+        .prev-btn {
+            background: white;
+            border: 1px solid #A1CEF8;
+            color: #2A5987;
+        }
+        .privacy-tip {
+            bottom: 85px !important;
+        }
+    </style>
+</head>
+<body>
+<!-- 加载弹窗 -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<!-- 提示弹窗 -->
+<div class="toast" id="toast"></div>
+
+
+
+<div class="title-img-container">
+    <img src="images/math/数字2.png" alt="标题上方图片" class="title-top-img" loading="lazy" onerror="this.src='static/images/占位图.png'">
+    <img src="images/math/015_双鱼座.png" alt="附加图标" class="title-extra-img" loading="lazy" onerror="this.src='static/images/占位图.png'">
+</div>
+
+<div class="step-title">请选择加料 🍬（可多选）</div>
+
+<div class="option-grid">
+    <div class="option-item" onclick="toggleOption(this, '珍珠')">
+        <img src="images/categories/006z57zUly1hkeep7v7l0j323w35se85.jpg" alt="珍珠" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>珍珠</span>
+    </div>
+    <div class="option-item" onclick="toggleOption(this, '爆爆珠')">
+        <img src="images/categories/006z57zUly1hkmixuig50j320w31chdv.jpg" alt="爆爆珠" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>爆爆珠</span>
+    </div>
+    <div class="option-item" onclick="toggleOption(this, '椰果')">
+        <img src="images/categories/006z57zUly1hkeep7v7l0j323w35se85.jpg" alt="椰果" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>椰果</span>
+    </div>
+    <div class="option-item" onclick="toggleOption(this, '布丁')">
+        <img src="images/categories/006z57zUly1hkmixuig50j320w31chdv.jpg" alt="布丁" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>布丁</span>
+    </div>
+    <div class="option-item" onclick="toggleOption(this, '芋圆')">
+        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="芋圆" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>芋圆</span>
+    </div>
+    <div class="option-item" onclick="toggleOption(this, '芋泥')">
+        <img src="images/categories/006z57zUly1hkmixuig50j320w31chdv.jpg" alt="芋泥" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>芋泥</span>
+    </div>
+    <div class="option-item" onclick="toggleOption(this, '木薯')">
+        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="木薯" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>木薯</span>
+    </div>
+    <div class="option-item" onclick="toggleOption(this, '冰淇淋')">
+        <img src="images/categories/006z57zUly1hkmixuig50j320w31chdv.jpg" alt="冰淇淋" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>冰淇淋</span>
+    </div>
+    <div class="option-item" onclick="toggleOption(this, '奶盖')">
+        <img src="images/categories/006z57zUly1hkmixuig50j320w31chdv.jpg" alt="奶盖" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>奶盖</span>
+    </div>
+    <div class="option-item" onclick="toggleOption(this, '红豆')">
+        <img src="images/categories/006z57zUly1hkmixuig50j320w31chdv.jpg" alt="红豆" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>红豆</span>
+    </div>
+    <div class="option-item" onclick="toggleOption(this, '红糖')">
+        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="红糖" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <span>红糖</span>
+    </div>
+</div>
+
+<div class="selected-area">
+    <div class="selected-text" id="selectedText">已选：无</div>
+</div>
+
+<div class="footer-bar">
+    <button class="prev-btn" onclick="navigateTo('step1.html')">上一步</button>
+    <button class="next-btn" onclick="goToNextStep()">下一步</button>
+</div>
+
+<!-- 音效 -->
+<audio id="clickSound" preload="auto" style="display: none;">
+    <source src="audio/click.mp3" type="audio/mpeg">
+</audio>
+
+
+
+<!-- 公共脚本 -->
+<script src="js/storage.js"></script>
+<script src="js/common.js"></script>
+<script src="js/components.js"></script>
+<script src="js/logger.js"></script>
+
+<script>
+    let selectedToppings = [];
+    let selectedBase = "";
+    const MAX_TOPPINGS = 6; // 最多6种加料
+
+    // 切换加料选择
+    function toggleOption(item, name) {
+        const isSelected = selectedToppings.includes(name);
+
+        // 限制最多选择6种
+        if (!isSelected && selectedToppings.length >= MAX_TOPPINGS) {
+            showToast(`最多只能选择${MAX_TOPPINGS}种加料哦～`);
+            return;
+        }
+
+        if (isSelected) {
+            selectedToppings = selectedToppings.filter(t => t !== name);
+            item.classList.remove("selected");
+        } else {
+            selectedToppings.push(name);
+            item.classList.add("selected");
+        }
+
+        updateSelectedText();
+    }
+
+    // 更新已选文本
+    function updateSelectedText() {
+        let textParts = [];
+        if (selectedBase) textParts.push(`杯底：${escapeHtml(selectedBase)}`);
+        if (selectedToppings.length > 0) {
+            const safeToppings = selectedToppings.map(t => escapeHtml(t)).join("、");
+            textParts.push(`加料：${safeToppings}`);
+        }
+
+        const text = textParts.length > 0 ? textParts.join(" | ") : "已选：无";
+        document.getElementById("selectedText").innerText = text;
+    }
+
+    // 跳转到下一步
+    function goToNextStep() {
+        let drink = Storage.get("customDrink") || {};
+        drink.toppings = selectedToppings;
+        Storage.set("customDrink", drink);
+        navigateTo("step3.html");
+    }
+
+    // 初始化
+    window.addEventListener('DOMContentLoaded', function() {
+        // 兼容Array.includes
+        if (!Array.prototype.includes) {
+            Array.prototype.includes = function(searchElement) {
+                return this.indexOf(searchElement) !== -1;
+            };
+        }
+
+        // 读取已选数据
+        const drink = Storage.get("customDrink");
+        selectedBase = drink?.base || "";
+        selectedToppings = Array.isArray(drink?.toppings) ? drink.toppings : [];
+
+        // 恢复选中状态
+        if (selectedToppings.length > 0) {
+            const optionItems = document.querySelectorAll(".option-item");
+            optionItems.forEach(item => {
+                const span = item.querySelector('span');
+                if (span && selectedToppings.includes(span.textContent)) {
+                    item.classList.add("selected");
+                }
+            });
+        }
+
+        // 更新已选文本
+        updateSelectedText();
+
+        // 绑定音效
+        bindSoundToAllButtons();
+    });
+</script>
+</body>
+</html>
