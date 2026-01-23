@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <title>定制结果 - 珍珠宇宙茶饮屋</title>
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 15px;
+        }
+        .result-img {
+            width: 80%;
+            max-width: 400px;
+            height: auto;
+            margin-bottom: 20px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .result-text {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            padding: 0 10px;
+        }
+        .btn {
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            min-height: 48px;
+            min-width: 200px;
+        }
+        .success-btn {
+            background: cornflowerblue;
+            color: white;
+        }
+        .fail-btn {
+            background: deepskyblue;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<!-- 加载弹窗 -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<!-- 提示弹窗 -->
+<div class="toast" id="toast"></div>
+
+<!-- 核心改动：统一图片初始路径（去掉static） -->
+<img id="resultImg" class="result-img" src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="结果图标">
+<div id="resultText" class="result-text"></div>
+<button id="actionBtn" class="btn" onclick="handleAction()"></button>
+
+<!-- 核心改动：拆分嵌套的audio标签，每个独立闭合 -->
+<audio id="clickSound" preload="auto" style="display: none;">
+    <source src="audio/click.mp3" type="audio/mpeg">
+</audio>
+<audio id="successSound" preload="auto" muted style="display: none;">
+    <source src="audio/copy_C7219BE8-8750-4A67-8EDE-7E275DD5D39D.mp3" type="audio/mpeg">
+</audio>
+<audio id="failSound" preload="auto" muted style="display: none;">
+    <source src="audio/hei.mp3" type="audio/mpeg">
+</audio>
+
+<!-- 公共脚本 -->
+<script src="js/storage.js"></script>
+<script src="js/common.js"></script>
+<script src="js/components.js"></script>
+<script src="js/logger.js"></script>
+
+<script>
+    // 自动播放结果音效
+    function autoPlayResultSound(audioId) {
+        const audio = document.getElementById(audioId);
+        if (!audio) return;
+
+        audio.currentTime = 0;
+        audio.play()
+            .then(() => {
+                audio.muted = false;
+            })
+            .catch(() => {
+                audio.muted = false;
+                audio.play();
+            });
+    }
+
+    // 清空当前定制数据（保留购物车）
+    function clearCustomData() {
+        Storage.remove("customDrink");
+        console.log("已清空当前定制饮品数据，保留购物车数据");
+    }
+
+    // 处理按钮点击
+    function handleAction() {
+        const status = urlParams.get('status');
+        if (status === 'success') {
+            navigateTo("customize.html");
+        } else {
+            clearCustomData();
+            navigateTo("index.html");
+        }
+    }
+
+    // 初始化
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status');
+
+    window.addEventListener('DOMContentLoaded', function() {
+        if (status === 'success') {
+            // 核心改动：去掉static/前缀
+            document.getElementById("resultImg").src = "images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg";
+            document.getElementById("resultText").innerText = "定制成功！";
+            document.getElementById("actionBtn").innerText = "继续定制细节";
+            document.getElementById("actionBtn").className = "btn success-btn";
+            autoPlayResultSound("successSound");
+        } else {
+            // 核心改动：去掉static/前缀
+            document.getElementById("resultImg").src = "images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg";
+            document.getElementById("resultText").innerText = "这是黑暗料理，无法制作！";
+            document.getElementById("actionBtn").innerText = "返回重新定制";
+            document.getElementById("actionBtn").className = "btn fail-btn";
+            autoPlayResultSound("failSound");
+        }
+        bindSoundToAllButtons();
+    });
+</script>
+</body>
+</html>
