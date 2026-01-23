@@ -10,7 +10,7 @@
 - 交互式杯贴绘制
 
 ## 🚀 快速开始
-访问：https://你的用户名.github.io/pearl-universe-tea/
+访问：https://wssly.github.io/pearl-universe-tea/
 
 ## 📁 项目结构
 
