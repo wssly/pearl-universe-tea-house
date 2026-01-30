@@ -190,7 +190,7 @@
 
     <!-- 音效 -->
     <audio id="clickSound" preload="auto" style="display: none;">
-        <source src="audio/click.MP3" type="audio/mpeg">
+        <source src="audio/click.mp3" type="audio/mpeg">
     </audio>
 
     <!-- 公共脚本 -->
@@ -286,60 +286,49 @@
         }
 
         // 确认定制
-        // 确认定制
-function confirmCustom() {
-    if (!selections.cup || !selections.ice) return;
-    
-    // 播放确认音效
-    const confirmSound = document.getElementById('clickSound');
-    if (confirmSound) {
-        confirmSound.currentTime = 0;
-        confirmSound.play().catch(e => console.log('确认音效播放失败:', e));
-    }
-    
-    let drink = Storage.get("customDrink") || {};
-    drink.cup = selections.cup;
-    drink.ice = selections.ice;
-    Storage.set("customDrink", drink);
-    
-    // 黑暗料理校验逻辑
-    let isDark = false;
-    const base = drink.base || "";
-    const toppings = Array.isArray(drink.toppings) ? drink.toppings : [];
-    
-    // 美式仅允许特定加料
-    const americanAllowedToppings = ["珍珠", "椰果", "布丁"];
-    if (base === "美式" && toppings.length > 0) {
-        const hasForbiddenTopping = toppings.some(t => !americanAllowedToppings.includes(t));
-        if (hasForbiddenTopping) isDark = true;
-    }
-    
-    // 绿茶/红茶+木薯 = 黑暗料理
-    if (!isDark && ["绿茶", "红茶"].includes(base) && toppings.includes("木薯")) isDark = true;
-    
-    // 果茶禁止特定加料
-    const fruitTeaForbiddenToppings = ["布丁", "芋泥", "木薯", "红豆"];
-    if (!isDark && base === "果茶") {
-        const hasForbiddenTopping = toppings.some(t => fruitTeaForbiddenToppings.includes(t));
-        if (hasForbiddenTopping) isDark = true;
-    }
-    
-    // 姜茶仅允许红糖
-    const gingerTeaAllowedToppings = ["红糖"];
-    if (!isDark && base === "姜茶" && toppings.length > 0) {
-        const hasForbiddenTopping = toppings.some(t => !gingerTeaAllowedToppings.includes(t));
-        if (hasForbiddenTopping) isDark = true;
-    }
-    
-    // 加料超过6种
-    if (!isDark && toppings.length > 6) isDark = true;
-    
-    // 标记用户已经交互（用于结果页面音频播放）
-    sessionStorage.setItem('userInteracted', 'true');
-    
-    // 跳转到结果页
-    navigateTo(`result.html?status=${isDark ? 'fail' : 'success'}`);
-}
+        function confirmCustom() {
+            if (!selections.cup || !selections.ice) return;
+
+            let drink = Storage.get("customDrink") || {};
+            drink.cup = selections.cup;
+            drink.ice = selections.ice;
+            Storage.set("customDrink", drink);
+
+            // 黑暗料理校验逻辑
+            let isDark = false;
+            const base = drink.base || "";
+            const toppings = Array.isArray(drink.toppings) ? drink.toppings : [];
+
+            // 美式仅允许特定加料
+            const americanAllowedToppings = ["珍珠", "椰果", "布丁"];
+            if (base === "美式" && toppings.length > 0) {
+                const hasForbiddenTopping = toppings.some(t => !americanAllowedToppings.includes(t));
+                if (hasForbiddenTopping) isDark = true;
+            }
+
+            // 绿茶/红茶+木薯 = 黑暗料理
+            if (!isDark && ["绿茶", "红茶"].includes(base) && toppings.includes("木薯")) isDark = true;
+
+            // 果茶禁止特定加料
+            const fruitTeaForbiddenToppings = ["布丁", "芋泥", "木薯", "红豆"];
+            if (!isDark && base === "果茶") {
+                const hasForbiddenTopping = toppings.some(t => fruitTeaForbiddenToppings.includes(t));
+                if (hasForbiddenTopping) isDark = true;
+            }
+
+            // 姜茶仅允许红糖
+            const gingerTeaAllowedToppings = ["红糖"];
+            if (!isDark && base === "姜茶" && toppings.length > 0) {
+                const hasForbiddenTopping = toppings.some(t => !gingerTeaAllowedToppings.includes(t));
+                if (hasForbiddenTopping) isDark = true;
+            }
+
+            // 加料超过6种
+            if (!isDark && toppings.length > 6) isDark = true;
+
+            // 跳转到结果页
+            navigateTo(`result.html?status=${isDark ? 'fail' : 'success'}`);
+        }
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {

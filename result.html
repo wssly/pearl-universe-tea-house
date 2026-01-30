@@ -20,7 +20,6 @@
             align-items: center;
             justify-content: center;
             padding: 20px 15px;
-            /* 增加触摸适配，让移动端交互检测更灵敏 */
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
@@ -31,12 +30,6 @@
             margin-bottom: 20px;
             object-fit: cover;
             border-radius: 10px;
-            /* 防止图片加载闪烁 */
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-        .result-img.loaded {
-            opacity: 1;
         }
         .result-text {
             font-size: 20px;
@@ -69,7 +62,6 @@
         .fail-btn:hover {
             background: #00bfff;
         }
-        /* 提示弹窗样式补全（避免线上样式丢失） */
         .toast {
             position: fixed;
             top: 50%;
@@ -96,7 +88,6 @@
             z-index: 9998;
             display: none;
         }
-        /* 新增：加载动画基础样式（仅修复无样式问题） */
         .loading-spinner {
             width: 40px;
             height: 40px;
@@ -109,341 +100,220 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* 音频提示 */
-        .audio-hint {
-            font-size: 14px;
-            color: #666;
-            margin-top: 10px;
-            text-align: center;
-            padding: 8px;
-            background: #f5f5f5;
-            border-radius: 5px;
-            width: 80%;
-            max-width: 400px;
-            display: none;
-        }
     </style>
 </head>
 <body>
-<!-- 加载弹窗 -->
 <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-spinner"></div>
 </div>
-
-<!-- 提示弹窗 -->
 <div class="toast" id="toast"></div>
-
-<!-- 结果图片 -->
-<img id="resultImg" class="result-img" src="images/beijing.png" alt="结果图标" 
-     onerror="handleImageError(this)">
+<img id="resultImg" class="result-img" src="images/beijing.png" alt="结果图标" onerror="this.src='images/fail.jpg'">
 <div id="resultText" class="result-text"></div>
-<div id="audioHint" class="audio-hint">点击页面任意位置播放声音</div>
 <button id="actionBtn" class="btn" onclick="handleAction()"></button>
 
-<!-- 音频标签 -->
-<audio id="clickSound" preload="auto" style="display: none;">
-    <source src="audio/click.MP3" type="audio/mpeg">
+<audio id="clickSound" preload="auto" style="display: none;" onError="console.log('点击音效加载失败：', this.src)">
+    <source src="audio/click.mp3" type="audio/mpeg">
 </audio> 
-<audio id="successSound" preload="auto" style="display: none;">
+<audio id="successSound" preload="auto" style="display: none;" onError="console.log('成功音效加载失败：', this.src)">
     <source src="audio/copy_C7219BE8-8750-4A67-8EDE-7E275DD5D39D_min.mp3" type="audio/mpeg">
 </audio> 
-<audio id="failSound" preload="auto" style="display: none;">
+<audio id="failSound" preload="auto" style="display: none;" onError="console.log('失败音效加载失败：', this.src)">
     <source src="audio/hei.mp3" type="audio/mpeg">
 </audio> 
 
-<!-- 公共脚本 -->
 <script src="js/storage.js"></script>
 <script src="js/common.js"></script>
 <script src="js/components.js"></script>
 <script src="js/logger.js"></script>
 
 <script>
-    // 移到所有函数前（修复变量未定义报错）
+    // 1. 核心变量初始化 + 防重复控制锁
     const urlParams = new URLSearchParams(window.location.search);
     const status = urlParams.get('status') || 'fail';
-    const isWeixin = /MicroMessenger/i.test(navigator.userAgent);
-    
-    // 全局状态
-    let hasUserInteracted = false;
-    let audioPlayed = false;
-    let imageLoaded = false;
+    let hasUserInteracted = false; // 用户是否已交互（浏览器音频播放强制要求）
+    let targetAudioId = status === 'success' ? 'successSound' : 'failSound';
+    let isAudioPlaying = false; // 音频播放中锁
+    let isBtnClicking = false; // 按钮点击中锁
 
-    // 图片加载错误处理
-    function handleImageError(img) {
-        console.log('图片加载失败，使用备用图片');
-        img.onerror = null; // 防止循环
-        img.src = 'images/beijing.png';
-        img.classList.add('loaded');
-    }
-
-    // 图片预加载
-    function preloadImages(successSrc, failSrc) {
-        return new Promise((resolve) => {
-            const img1 = new Image();
-            const img2 = new Image();
-            let loadedCount = 0;
-            
-            img1.onload = img2.onload = function() {
-                loadedCount++;
-                if (loadedCount === 2) {
-                    resolve(true);
-                }
-            };
-            
-            img1.onerror = img2.onerror = function() {
-                loadedCount++;
-                if (loadedCount === 2) {
-                    resolve(false);
-                }
-            };
-            
-            img1.src = successSrc;
-            img2.src = failSrc;
-        });
-    }
-
-    // 标记用户交互
+    // 2. 页面交互标记（每次点击都触发，仅首次标记交互状态）
     function markInteracted() {
+        // 首次点击标记为已交互（解锁浏览器音频播放限制）
         if (!hasUserInteracted) {
             hasUserInteracted = true;
-            console.log('用户已交互');
-            
-            // 如果音频还没播放，尝试播放
-            if (!audioPlayed) {
-                setTimeout(() => {
-                    playResultSound(status === 'success' ? 'successSound' : 'failSound');
-                }, 100);
-            }
-            
-            // 隐藏音频提示
-            document.getElementById('audioHint').style.display = 'none';
+            console.log('用户首次交互完成，解锁音频播放限制');
         }
+        // 每次点击都执行音频播放（去掉原有return，不再仅执行一次）
+        playResultSound(targetAudioId);
     }
 
-    // 改进的音频播放函数
+    // 3. 音频播放逻辑（保留原有防重复播放）
     function playResultSound(audioId) {
-        if (audioPlayed) return;
+        // 防重复播放：如果已有音频在播放，直接返回
+        if (isAudioPlaying) return;
         
         const audio = document.getElementById(audioId);
         if (!audio) {
             console.log('音频元素不存在：', audioId);
             return;
         }
+
+        // 播放前锁
+        isAudioPlaying = true;
+        // 强制重置播放起点（每次点击都从开头播放）
+        audio.currentTime = 0;
         
-        // 确保音频已加载
-        if (audio.readyState === 0) {
-            console.log('音频未加载，等待加载');
-            audio.load();
-        }
-        
-        const playAudio = () => {
-            audio.currentTime = 0;
-            audio.volume = 1.0;
-            
-            const playPromise = audio.play();
-            
-            if (playPromise !== undefined) {
-                playPromise
-                    .then(() => {
-                        console.log('音频播放成功：', audioId);
-                        audioPlayed = true;
-                    })
-                    .catch(err => {
-                        console.log('音频播放失败：', audioId, err.message);
-                        
-                        // 显示音频提示
-                        if (!hasUserInteracted) {
-                            document.getElementById('audioHint').style.display = 'block';
-                        }
-                        
-                        // 如果是自动播放被阻止，等待用户交互
-                        if (err.name === 'NotAllowedError') {
-                            console.log('等待用户交互后再播放音频');
-                        }
-                    });
-            }
+        // 播放完成/失败后解锁
+        const unlockAudio = () => {
+            isAudioPlaying = false;
+            audio.removeEventListener('ended', unlockAudio);
+            audio.removeEventListener('error', unlockAudio);
         };
+        audio.addEventListener('ended', unlockAudio);
+        audio.addEventListener('error', unlockAudio);
         
-        // 检查音频是否可播放
-        if (audio.readyState >= 2) {
-            playAudio();
-        } else {
-            audio.addEventListener('canplaythrough', playAudio, { once: true });
-            // 3秒超时
-            setTimeout(() => {
-                if (!audioPlayed) {
-                    console.log('音频加载超时');
-                    audio.removeEventListener('canplaythrough', playAudio);
-                    playAudio(); // 仍然尝试播放
+        // 微信浏览器强制预加载音频
+        const loadAndPlay = () => {
+            audio.load();
+            audio.oncanplay = function() {
+                if (hasUserInteracted) {
+                    audio.play().then(() => {
+                        console.log('音频播放成功：', audioId);
+                    }).catch(err => {
+                        console.log('音频播放失败(微信兼容)：', audioId, err);
+                        unlockAudio(); // 失败也要解锁
+                        setTimeout(() => {
+                            if (!isAudioPlaying) {
+                                audio.currentTime = 0;
+                                audio.play().catch(e => {
+                                    console.log('重试播放失败：', audioId, e);
+                                    unlockAudio();
+                                });
+                            }
+                        }, 200);
+                    });
+                } else {
+                    unlockAudio(); // 无交互则解锁
                 }
-            }, 3000);
+            };
+        };
+
+        // 微信环境特殊处理
+        if (/(MicroMessenger)/i.test(navigator.userAgent)) {
+            loadAndPlay();
+        } else {
+            // 普通浏览器逻辑
+            if (audio.readyState >= 2) {
+                audio.play().catch(err => {
+                    console.log('普通浏览器播放失败：', audioId, err);
+                    unlockAudio();
+                });
+            } else {
+                audio.addEventListener('canplaythrough', () => {
+                    audio.play().catch(err => {
+                        console.log('普通浏览器加载后播放失败：', audioId, err);
+                        unlockAudio();
+                    });
+                }, { once: true });
+            }
         }
     }
 
+    // 4. 清空数据逻辑
     function clearCustomData() {
         try {
             Storage.remove("customDrink");
-            console.log("已清空当前定制饮品数据");
+            console.log("已清空当前定制饮品数据，保留购物车数据");
         } catch (e) {
             console.log('清空数据失败：', e);
         }
     }
 
-    // 处理按钮点击
+    // 5. 按钮点击逻辑（增加防重复点击）
     function handleAction() {
+        // 防重复点击：如果正在点击中，直接返回
+        if (isBtnClicking) return;
+        isBtnClicking = true; // 点击锁
+        
         try {
-            // 播放点击音效
-            const clickSound = document.getElementById('clickSound');
-            if (clickSound) {
-                clickSound.currentTime = 0;
-                clickSound.play().catch(e => console.log('点击音效失败:', e));
-            }
+            // 播放点击音效（受isAudioPlaying控制，避免和结果音效冲突）
+            playResultSound("clickSound");
             
+            // 禁用按钮视觉反馈（可选）
+            const actionBtn = document.getElementById('actionBtn');
+            actionBtn.disabled = true;
+            actionBtn.style.opacity = '0.7';
+            actionBtn.style.cursor = 'not-allowed';
+
+            // 跳转逻辑
             if (status === 'success') {
-                typeof navigateTo === 'function' ? 
-                    navigateTo("customize.html") : 
-                    window.location.href = "customize.html";
+                typeof navigateTo === 'function' ? navigateTo("customize.html") : window.location.href = "customize.html";
             } else {
                 clearCustomData();
-                typeof navigateTo === 'function' ? 
-                    navigateTo("index.html") : 
-                    window.location.href = "index.html";
+                typeof navigateTo === 'function' ? navigateTo("index.html") : window.location.href = "index.html";
             }
         } catch (e) {
             console.log('按钮点击逻辑报错：', e);
+            isBtnClicking = false; // 报错解锁
+            // 恢复按钮状态
+            const actionBtn = document.getElementById('actionBtn');
+            actionBtn.disabled = false;
+            actionBtn.style.opacity = '1';
+            actionBtn.style.cursor = 'pointer';
         }
     }
 
-    // 初始化页面内容
-    async function initContent() {
-        const resultImg = document.getElementById("resultImg");
-        const resultText = document.getElementById("resultText");
-        const actionBtn = document.getElementById("actionBtn");
-        
-        // 预加载图片
+    // 6. 初始化页面
+    function initPage() {
         try {
-            const imagesPreloaded = await preloadImages('images/success.jpg', 'images/fail.jpg');
-            console.log('图片预加载完成:', imagesPreloaded);
+            bindSoundToAllButtons();
         } catch (e) {
-            console.log('图片预加载失败:', e);
+            console.log('绑定按钮音效失败：', e);
         }
-        
+
+        // 设置页面内容
         if (status === 'success') {
-            resultImg.src = "images/success.jpg";
-            resultText.innerText = "定制成功！";
-            actionBtn.innerText = "继续定制细节";
-            actionBtn.className = "btn success-btn";
+            document.getElementById("resultImg").src = "images/success.jpg";
+            document.getElementById("resultText").innerText = "定制成功！";
+            document.getElementById("actionBtn").innerText = "继续定制细节";
+            document.getElementById("actionBtn").className = "btn success-btn";
         } else {
-            resultImg.src = "images/fail.jpg";
-            resultText.innerText = "这是黑暗料理，无法制作！";
-            actionBtn.innerText = "返回重新定制";
-            actionBtn.className = "btn fail-btn";
+            document.getElementById("resultImg").src = "images/fail.jpg";
+            document.getElementById("resultText").innerText = "这是黑暗料理，无法制作！";
+            document.getElementById("actionBtn").innerText = "返回重新定制";
+            document.getElementById("actionBtn").className = "btn fail-btn";
         }
-        
-        // 确保图片显示
-        resultImg.onload = function() {
-            console.log('结果图片加载完成');
-            resultImg.classList.add('loaded');
-            imageLoaded = true;
-            
-            // 图片加载后尝试播放音频
-            if (hasUserInteracted || !isWeixin) {
-                setTimeout(() => {
-                    playResultSound(status === 'success' ? 'successSound' : 'failSound');
-                }, 300);
-            }
-        };
-        
-        resultImg.onerror = function() {
-            console.log('结果图片加载失败，使用默认图片');
-            resultImg.src = 'images/beijing.png';
-            resultImg.classList.add('loaded');
-            imageLoaded = true;
-        };
-        
-        // 如果图片已经缓存，立即显示
-        if (resultImg.complete) {
-            resultImg.classList.add('loaded');
-            imageLoaded = true;
-        }
+
+        // 延迟播放音频（首次加载无用户交互，会失败，不影响后续点击）
+        setTimeout(() => {
+            playResultSound(targetAudioId);
+        }, 100);
     }
 
-    // 页面初始化
-    async function initPage() {
-        console.log('初始化结果页面，状态:', status);
-        
-        try {
-            // 绑定按钮音效
-            if (typeof bindSoundToAllButtons === 'function') {
-                bindSoundToAllButtons();
-            }
-            
-            // 初始化内容
-            await initContent();
-            
-            // 监听用户交互
-            document.addEventListener('click', markInteracted);
-            document.addEventListener('touchstart', markInteracted);
-            
-            // 如果是微信环境，检查是否已经有交互
-            if (isWeixin) {
-                // 检查是否有之前的页面交互记录
-                const previousInteraction = sessionStorage.getItem('userInteracted');
-                if (previousInteraction === 'true') {
-                    hasUserInteracted = true;
-                    console.log('检测到之前的用户交互');
-                }
-                
-                // 标记当前页面已交互，供后续页面使用
-                markInteracted();
-                sessionStorage.setItem('userInteracted', 'true');
-            }
-            
-            // 非微信环境，直接尝试播放音频
-            if (!isWeixin && !hasUserInteracted) {
-                setTimeout(() => {
-                    playResultSound(status === 'success' ? 'successSound' : 'failSound');
-                }, 800);
-            }
-            
-        } catch (e) {
-            console.log('页面初始化失败：', e);
-        }
-    }
+    // 7. 全局监听所有点击/触摸事件（移除once，每次点击都触发）
+    document.addEventListener('click', markInteracted);
+    document.addEventListener('touchstart', markInteracted);
 
-    // 根据环境初始化
-    if (isWeixin) {
-        // 微信浏览器：等待WeixinJSBridgeReady
+    // 8. 浏览器适配初始化（保留原有微信/普通浏览器兼容逻辑）
+    if (/(MicroMessenger)/i.test(navigator.userAgent)) {
+        function wxInit() {
+            if (window.WeixinJSBridge && window.WeixinJSBridge.invoke) {
+                initPage();
+            } else {
+                setTimeout(wxInit, 50);
+            }
+        }
         if (window.WeixinJSBridge) {
-            console.log('微信JSBridge已就绪');
-            initPage();
+            wxInit();
         } else {
-            console.log('等待微信JSBridge就绪');
-            document.addEventListener('WeixinJSBridgeReady', () => {
-                console.log('微信JSBridge就绪');
-                initPage();
-            }, { once: true });
-            
-            // 5秒超时，强制初始化
-            setTimeout(() => {
-                console.log('微信JSBridge等待超时，强制初始化');
-                initPage();
-            }, 5000);
+            document.addEventListener('WeixinJSBridgeReady', wxInit, { once: true });
         }
     } else {
-        // 普通浏览器：直接初始化
-        initPage();
-    }
-    
-    // 页面可见性变化处理
-    document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'visible' && !audioPlayed && imageLoaded) {
-            console.log('页面重新可见，尝试播放音频');
-            setTimeout(() => {
-                playResultSound(status === 'success' ? 'successSound' : 'failSound');
-            }, 300);
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            initPage();
+        } else {
+            document.addEventListener('DOMContentLoaded', initPage, { once: true });
         }
-    });
+    }
 </script>
 </body>
 </html>
