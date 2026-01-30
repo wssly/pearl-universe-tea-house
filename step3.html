@@ -5,30 +5,35 @@
     <meta charset="UTF-8">
     <title>请选择糖度 - 珍珠宇宙茶饮屋</title>
     <link rel="stylesheet" href="css/app.css">
+    <link rel="icon" href="images/t.ico" type="image/x-icon">
     <style>
         body {
             padding-bottom: 200px;
             padding-left: 10px;
             padding-right: 10px;
-            padding-top: 64px;
+            padding-top: 40px;
         }
-        .title-img-container {
-            display: flex;
-            align-items: center;
-            margin: 30px 0 5px 0;
-        }
-        .title-top-img {
-            width: 54px;
-            height: 54px;
-            object-fit: contain;
-        }
-        .title-extra-img {
-            width: 64px;
-            height: 64px;
-            object-fit: contain;
-            border-radius: 8px;
-            margin-left: 265px;
-        }
+.title-img-container {
+    display: flex;
+    align-items:flex-start; 
+    justify-content: space-between;
+    width: 100%;
+    margin: 30px 0 5px 0;
+    padding: 0 5px;
+}
+
+.title-extra-img {
+    width: 102px; 
+    height: 102px; 
+    object-fit: contain;
+    border-radius: 8px;
+    margin-top: -16px; 
+}
+.title-top-img {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+}
         .step-title {
             text-align: left;
             font-size: 18px;
@@ -72,27 +77,27 @@
 
 
 <div class="title-img-container">
-    <img src="images/math/国际时尚_数字3.png" alt="标题上方图片" class="title-top-img" loading="lazy" onerror="this.src='static/images/占位图.png'">
-    <img src="images/math/015_双鱼座.png" alt="附加图标" class="title-extra-img" loading="lazy" onerror="this.src='static/images/占位图.png'">
+    <img src="images/math/国际时尚_数字3.png" alt="标题上方图片" class="title-top-img" loading="lazy" onerror="this.src='images/beijing.png'">
+    <img src="images/logoo.png" alt="附加图标" class="title-extra-img" loading="lazy" onerror="this.src='images/beijing.png'">
 </div>
 
 <div class="step-title">请选择糖度 🍬（必选，仅选1种）</div>
 
 <div class="option-grid">
     <div class="option-item" onclick="selectSugar(this, '无糖')">
-        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="无糖" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/toppings/wut.jpg" alt="无糖" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>无糖</span>
     </div>
     <div class="option-item" onclick="selectSugar(this, '三分甜')">
-        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="三分甜" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/toppings/sanfent.jpg" alt="三分甜" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>三分甜</span>
     </div>
     <div class="option-item" onclick="selectSugar(this, '七分甜')">
-        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="七分甜" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/toppings/qifent.png" alt="七分甜" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>七分甜</span>
     </div>
     <div class="option-item" onclick="selectSugar(this, '全糖')">
-        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="全糖" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/toppings/quant.png" alt="全糖" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>全糖</span>
     </div>
 </div>
@@ -108,11 +113,10 @@
 
 <!-- 音效 -->
 <audio id="clickSound" preload="auto" style="display: none;">
-    <source src="audio/click.mp3" type="audio/mpeg">
+    <source src="audio/click.MP3" type="audio/mpeg">
 </audio>
 
-<!-- 隐私提示 -->
-<div class="privacy-tip">本页面仅在本地存储您的选择信息，不会上传至服务器</div>
+
 
 <!-- 公共脚本 -->
 <script src="js/storage.js"></script>

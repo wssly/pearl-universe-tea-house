@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>定制结果 - 珍珠宇宙茶饮屋</title>
     <link rel="stylesheet" href="css/app.css">
+    <link rel="icon" href="images/t.ico" type="image/x-icon">
     <style>
         * {
             margin: 0;
@@ -19,6 +20,9 @@
             align-items: center;
             justify-content: center;
             padding: 20px 15px;
+            /* 增加触摸适配，让移动端交互检测更灵敏 */
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         .result-img {
             width: 80%;
@@ -27,6 +31,12 @@
             margin-bottom: 20px;
             object-fit: cover;
             border-radius: 10px;
+            /* 防止图片加载闪烁 */
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .result-img.loaded {
+            opacity: 1;
         }
         .result-text {
             font-size: 20px;
@@ -43,14 +53,74 @@
             border: none;
             min-height: 48px;
             min-width: 200px;
+            transition: all 0.2s ease;
         }
         .success-btn {
             background: cornflowerblue;
             color: white;
         }
+        .success-btn:hover {
+            background: #5b92e5;
+        }
         .fail-btn {
             background: deepskyblue;
             color: white;
+        }
+        .fail-btn:hover {
+            background: #00bfff;
+        }
+        /* 提示弹窗样式补全（避免线上样式丢失） */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 9999;
+            display: none;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9998;
+            display: none;
+        }
+        /* 新增：加载动画基础样式（仅修复无样式问题） */
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid cornflowerblue;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* 音频提示 */
+        .audio-hint {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+            text-align: center;
+            padding: 8px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 400px;
+            display: none;
         }
     </style>
 </head>
@@ -63,21 +133,23 @@
 <!-- 提示弹窗 -->
 <div class="toast" id="toast"></div>
 
-<!-- 核心改动：统一图片初始路径（去掉static） -->
-<img id="resultImg" class="result-img" src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="结果图标">
+<!-- 结果图片 -->
+<img id="resultImg" class="result-img" src="images/beijing.png" alt="结果图标" 
+     onerror="handleImageError(this)">
 <div id="resultText" class="result-text"></div>
+<div id="audioHint" class="audio-hint">点击页面任意位置播放声音</div>
 <button id="actionBtn" class="btn" onclick="handleAction()"></button>
 
-<!-- 核心改动：拆分嵌套的audio标签，每个独立闭合 -->
+<!-- 音频标签 -->
 <audio id="clickSound" preload="auto" style="display: none;">
-    <source src="audio/click.mp3" type="audio/mpeg">
-</audio>
-<audio id="successSound" preload="auto" muted style="display: none;">
-    <source src="audio/copy_C7219BE8-8750-4A67-8EDE-7E275DD5D39D.mp3" type="audio/mpeg">
-</audio>
-<audio id="failSound" preload="auto" muted style="display: none;">
+    <source src="audio/click.MP3" type="audio/mpeg">
+</audio> 
+<audio id="successSound" preload="auto" style="display: none;">
+    <source src="audio/copy_C7219BE8-8750-4A67-8EDE-7E275DD5D39D_min.mp3" type="audio/mpeg">
+</audio> 
+<audio id="failSound" preload="auto" style="display: none;">
     <source src="audio/hei.mp3" type="audio/mpeg">
-</audio>
+</audio> 
 
 <!-- 公共脚本 -->
 <script src="js/storage.js"></script>
@@ -86,60 +158,291 @@
 <script src="js/logger.js"></script>
 
 <script>
-    // 自动播放结果音效
-    function autoPlayResultSound(audioId) {
-        const audio = document.getElementById(audioId);
-        if (!audio) return;
+    // 移到所有函数前（修复变量未定义报错）
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status') || 'fail';
+    const isWeixin = /MicroMessenger/i.test(navigator.userAgent);
+    
+    // 全局状态
+    let hasUserInteracted = false;
+    let audioPlayed = false;
+    let imageLoaded = false;
 
-        audio.currentTime = 0;
-        audio.play()
-            .then(() => {
-                audio.muted = false;
-            })
-            .catch(() => {
-                audio.muted = false;
-                audio.play();
-            });
+    // 图片加载错误处理
+    function handleImageError(img) {
+        console.log('图片加载失败，使用备用图片');
+        img.onerror = null; // 防止循环
+        img.src = 'images/beijing.png';
+        img.classList.add('loaded');
     }
 
-    // 清空当前定制数据（保留购物车）
+    // 图片预加载
+    function preloadImages(successSrc, failSrc) {
+        return new Promise((resolve) => {
+            const img1 = new Image();
+            const img2 = new Image();
+            let loadedCount = 0;
+            
+            img1.onload = img2.onload = function() {
+                loadedCount++;
+                if (loadedCount === 2) {
+                    resolve(true);
+                }
+            };
+            
+            img1.onerror = img2.onerror = function() {
+                loadedCount++;
+                if (loadedCount === 2) {
+                    resolve(false);
+                }
+            };
+            
+            img1.src = successSrc;
+            img2.src = failSrc;
+        });
+    }
+
+    // 标记用户交互
+    function markInteracted() {
+        if (!hasUserInteracted) {
+            hasUserInteracted = true;
+            console.log('用户已交互');
+            
+            // 如果音频还没播放，尝试播放
+            if (!audioPlayed) {
+                setTimeout(() => {
+                    playResultSound(status === 'success' ? 'successSound' : 'failSound');
+                }, 100);
+            }
+            
+            // 隐藏音频提示
+            document.getElementById('audioHint').style.display = 'none';
+        }
+    }
+
+    // 改进的音频播放函数
+    function playResultSound(audioId) {
+        if (audioPlayed) return;
+        
+        const audio = document.getElementById(audioId);
+        if (!audio) {
+            console.log('音频元素不存在：', audioId);
+            return;
+        }
+        
+        // 确保音频已加载
+        if (audio.readyState === 0) {
+            console.log('音频未加载，等待加载');
+            audio.load();
+        }
+        
+        const playAudio = () => {
+            audio.currentTime = 0;
+            audio.volume = 1.0;
+            
+            const playPromise = audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        console.log('音频播放成功：', audioId);
+                        audioPlayed = true;
+                    })
+                    .catch(err => {
+                        console.log('音频播放失败：', audioId, err.message);
+                        
+                        // 显示音频提示
+                        if (!hasUserInteracted) {
+                            document.getElementById('audioHint').style.display = 'block';
+                        }
+                        
+                        // 如果是自动播放被阻止，等待用户交互
+                        if (err.name === 'NotAllowedError') {
+                            console.log('等待用户交互后再播放音频');
+                        }
+                    });
+            }
+        };
+        
+        // 检查音频是否可播放
+        if (audio.readyState >= 2) {
+            playAudio();
+        } else {
+            audio.addEventListener('canplaythrough', playAudio, { once: true });
+            // 3秒超时
+            setTimeout(() => {
+                if (!audioPlayed) {
+                    console.log('音频加载超时');
+                    audio.removeEventListener('canplaythrough', playAudio);
+                    playAudio(); // 仍然尝试播放
+                }
+            }, 3000);
+        }
+    }
+
     function clearCustomData() {
-        Storage.remove("customDrink");
-        console.log("已清空当前定制饮品数据，保留购物车数据");
+        try {
+            Storage.remove("customDrink");
+            console.log("已清空当前定制饮品数据");
+        } catch (e) {
+            console.log('清空数据失败：', e);
+        }
     }
 
     // 处理按钮点击
     function handleAction() {
-        const status = urlParams.get('status');
-        if (status === 'success') {
-            navigateTo("customize.html");
-        } else {
-            clearCustomData();
-            navigateTo("index.html");
+        try {
+            // 播放点击音效
+            const clickSound = document.getElementById('clickSound');
+            if (clickSound) {
+                clickSound.currentTime = 0;
+                clickSound.play().catch(e => console.log('点击音效失败:', e));
+            }
+            
+            if (status === 'success') {
+                typeof navigateTo === 'function' ? 
+                    navigateTo("customize.html") : 
+                    window.location.href = "customize.html";
+            } else {
+                clearCustomData();
+                typeof navigateTo === 'function' ? 
+                    navigateTo("index.html") : 
+                    window.location.href = "index.html";
+            }
+        } catch (e) {
+            console.log('按钮点击逻辑报错：', e);
         }
     }
 
-    // 初始化
-    const urlParams = new URLSearchParams(window.location.search);
-    const status = urlParams.get('status');
-
-    window.addEventListener('DOMContentLoaded', function() {
-        if (status === 'success') {
-            // 核心改动：去掉static/前缀
-            document.getElementById("resultImg").src = "images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg";
-            document.getElementById("resultText").innerText = "定制成功！";
-            document.getElementById("actionBtn").innerText = "继续定制细节";
-            document.getElementById("actionBtn").className = "btn success-btn";
-            autoPlayResultSound("successSound");
-        } else {
-            // 核心改动：去掉static/前缀
-            document.getElementById("resultImg").src = "images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg";
-            document.getElementById("resultText").innerText = "这是黑暗料理，无法制作！";
-            document.getElementById("actionBtn").innerText = "返回重新定制";
-            document.getElementById("actionBtn").className = "btn fail-btn";
-            autoPlayResultSound("failSound");
+    // 初始化页面内容
+    async function initContent() {
+        const resultImg = document.getElementById("resultImg");
+        const resultText = document.getElementById("resultText");
+        const actionBtn = document.getElementById("actionBtn");
+        
+        // 预加载图片
+        try {
+            const imagesPreloaded = await preloadImages('images/success.jpg', 'images/fail.jpg');
+            console.log('图片预加载完成:', imagesPreloaded);
+        } catch (e) {
+            console.log('图片预加载失败:', e);
         }
-        bindSoundToAllButtons();
+        
+        if (status === 'success') {
+            resultImg.src = "images/success.jpg";
+            resultText.innerText = "定制成功！";
+            actionBtn.innerText = "继续定制细节";
+            actionBtn.className = "btn success-btn";
+        } else {
+            resultImg.src = "images/fail.jpg";
+            resultText.innerText = "这是黑暗料理，无法制作！";
+            actionBtn.innerText = "返回重新定制";
+            actionBtn.className = "btn fail-btn";
+        }
+        
+        // 确保图片显示
+        resultImg.onload = function() {
+            console.log('结果图片加载完成');
+            resultImg.classList.add('loaded');
+            imageLoaded = true;
+            
+            // 图片加载后尝试播放音频
+            if (hasUserInteracted || !isWeixin) {
+                setTimeout(() => {
+                    playResultSound(status === 'success' ? 'successSound' : 'failSound');
+                }, 300);
+            }
+        };
+        
+        resultImg.onerror = function() {
+            console.log('结果图片加载失败，使用默认图片');
+            resultImg.src = 'images/beijing.png';
+            resultImg.classList.add('loaded');
+            imageLoaded = true;
+        };
+        
+        // 如果图片已经缓存，立即显示
+        if (resultImg.complete) {
+            resultImg.classList.add('loaded');
+            imageLoaded = true;
+        }
+    }
+
+    // 页面初始化
+    async function initPage() {
+        console.log('初始化结果页面，状态:', status);
+        
+        try {
+            // 绑定按钮音效
+            if (typeof bindSoundToAllButtons === 'function') {
+                bindSoundToAllButtons();
+            }
+            
+            // 初始化内容
+            await initContent();
+            
+            // 监听用户交互
+            document.addEventListener('click', markInteracted);
+            document.addEventListener('touchstart', markInteracted);
+            
+            // 如果是微信环境，检查是否已经有交互
+            if (isWeixin) {
+                // 检查是否有之前的页面交互记录
+                const previousInteraction = sessionStorage.getItem('userInteracted');
+                if (previousInteraction === 'true') {
+                    hasUserInteracted = true;
+                    console.log('检测到之前的用户交互');
+                }
+                
+                // 标记当前页面已交互，供后续页面使用
+                markInteracted();
+                sessionStorage.setItem('userInteracted', 'true');
+            }
+            
+            // 非微信环境，直接尝试播放音频
+            if (!isWeixin && !hasUserInteracted) {
+                setTimeout(() => {
+                    playResultSound(status === 'success' ? 'successSound' : 'failSound');
+                }, 800);
+            }
+            
+        } catch (e) {
+            console.log('页面初始化失败：', e);
+        }
+    }
+
+    // 根据环境初始化
+    if (isWeixin) {
+        // 微信浏览器：等待WeixinJSBridgeReady
+        if (window.WeixinJSBridge) {
+            console.log('微信JSBridge已就绪');
+            initPage();
+        } else {
+            console.log('等待微信JSBridge就绪');
+            document.addEventListener('WeixinJSBridgeReady', () => {
+                console.log('微信JSBridge就绪');
+                initPage();
+            }, { once: true });
+            
+            // 5秒超时，强制初始化
+            setTimeout(() => {
+                console.log('微信JSBridge等待超时，强制初始化');
+                initPage();
+            }, 5000);
+        }
+    } else {
+        // 普通浏览器：直接初始化
+        initPage();
+    }
+    
+    // 页面可见性变化处理
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible' && !audioPlayed && imageLoaded) {
+            console.log('页面重新可见，尝试播放音频');
+            setTimeout(() => {
+                playResultSound(status === 'success' ? 'successSound' : 'failSound');
+            }, 300);
+        }
     });
 </script>
 </body>

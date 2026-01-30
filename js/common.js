@@ -38,34 +38,59 @@ function showToast(text, duration = 2000) {
  * 页面跳转（带加载状态+容错）
  * @param {string} url - 目标URL
  */
+// 页面跳转函数（确保兼容性）
 function navigateTo(url) {
-    const loading = document.getElementById('loadingOverlay');
-    if (loading) loading.style.display = 'flex';
-
-    fetch(url, { method: 'HEAD' })
-        .then(res => {
-            if (res.ok) window.location.href = url;
-            else showToast('页面暂未开放～');
-        })
-        .catch(() => {
+    try {
+        // 先尝试使用现有的navigateTo函数
+        if (typeof window.navigateTo === 'function') {
+            return window.navigateTo(url);
+        }
+        
+        // 检查URL是否包含协议
+        if (url.indexOf('http') === 0) {
             window.location.href = url;
-        })
-        .finally(() => {
-            if (loading) loading.style.display = 'none';
-        });
+        } else {
+            // 相对路径处理
+            const currentPath = window.location.pathname;
+            const currentDir = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+            window.location.href = currentDir + url;
+        }
+    } catch (error) {
+        console.error('导航失败:', error);
+        window.location.href = url;
+    }
 }
 
-/**
- * 绑定所有按钮的音效
- */
+// 绑定音效到所有按钮
 function bindSoundToAllButtons() {
-    const allButtons = document.querySelectorAll('button, .option-item');
-    allButtons.forEach(el => {
-        if (!el.hasAttribute('data-sound-bound')) {
-            el.addEventListener('click', () => playSound('clickSound'));
-            el.setAttribute('data-sound-bound', 'true');
-        }
-    });
+    try {
+        const clickSound = document.getElementById('clickSound');
+        if (!clickSound) return;
+        
+        const buttons = document.querySelectorAll('button, .btn, .option-item');
+        buttons.forEach(btn => {
+            // 移除已存在的事件监听器
+            const oldOnClick = btn.onclick;
+            btn.onclick = function(e) {
+                // 播放音效
+                if (clickSound) {
+                    clickSound.currentTime = 0;
+                    clickSound.play().catch(err => {
+                        console.log('按钮音效播放失败:', err);
+                    });
+                }
+                
+                // 执行原有的点击事件
+                if (oldOnClick) {
+                    oldOnClick.call(this, e);
+                }
+            };
+        });
+        
+        console.log('音效绑定完成，绑定按钮数:', buttons.length);
+    } catch (error) {
+        console.error('绑定音效失败:', error);
+    }
 }
 
 /**
@@ -82,6 +107,8 @@ function escapeHtml(str) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
 }
+
+
 
 // 全局暴露工具函数
 window.playSound = playSound;

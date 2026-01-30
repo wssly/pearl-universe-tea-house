@@ -5,30 +5,36 @@
     <meta charset="UTF-8">
     <title>请选择杯底 - 珍珠宇宙茶饮屋</title>
     <link rel="stylesheet" href="css/app.css">
+    <link rel="icon" href="images/t.ico" type="image/x-icon">
     <style>
         body {
             padding-bottom: 200px;
             padding-left: 10px;
             padding-right: 10px;
-            padding-top: 64px;
+            padding-top: 40px;
         }
-        .title-img-container {
-            display: flex;
-            align-items: center;
-            margin: 30px 0 5px 0;
-        }
-        .title-top-img {
-            width: 54px;
-            height: 54px;
-            object-fit: contain;
-        }
-        .title-extra-img {
-            width: 64px;
-            height: 64px;
-            object-fit: contain;
-            border-radius: 8px;
-            margin-left: 265px; /* 替代gap，兼容低版本浏览器 */
-        }
+.title-img-container {
+    display: flex;
+    align-items:flex-start; 
+    justify-content: space-between;
+    width: 100%;
+    margin: 30px 0 5px 0;
+    padding: 0 5px;
+}
+
+.title-extra-img {
+    width: 102px; 
+    height: 102px; 
+    object-fit: contain;
+    border-radius: 8px;
+    margin-top: -16px; 
+}
+.title-top-img {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+}
+
         .step-title {
             text-align: left;
             font-size: 18px;
@@ -69,40 +75,40 @@
 <!-- 提示弹窗 -->
 <div class="toast" id="toast"></div>
 
-
-
 <div class="title-img-container">
-    <img src="images/math/数字1.png" alt="标题上方图片" class="title-top-img" loading="lazy" onerror="this.src='static/images/占位图.png'">
-    <img src="images/math/015_双鱼座.png" alt="附加图标" class="title-extra-img" loading="lazy" onerror="this.src='static/images/占位图.png'">
+    <img src="images/math/数字1.png" alt="标题上方图片" class="title-top-img" loading="lazy" onerror="this.src='images/beijing.png'">
+    <img src="images/logoo.png" alt="附加图标" class="title-extra-img" loading="lazy" onerror="this.src='images/beijing.png'">
 </div>
 
 <div class="step-title">请选择杯底 🧋（必选）</div>
 
 <div class="option-grid">
     <div class="option-item" onclick="selectOption(this, '奶茶')">
-        <img src="images/categories/006z57zUly1h44h0d1e7vj3301201hdt.jpg" alt="奶茶" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/drinks/zzzn.jpg" alt="奶茶" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>奶茶</span>
     </div>
-    <div class="option-item" onclick="selectOption(this, '果茶')">
-        <img src="images/categories/006z57zUly1h44h0dutr1j31xl2wenpd.jpg" alt="果茶" loading="lazy" onerror="this.src='static/images/占位图.png'">
-        <span>果茶</span>
-    </div>
-    <div class="option-item" onclick="selectOption(this, '绿茶')">
-        <img src="images/categories/006z57zUly1hjel8ikn6ej33i72d97wl.jpg" alt="绿茶" loading="lazy" onerror="this.src='static/images/占位图.png'">
-        <span>绿茶</span>
-    </div>
-    <div class="option-item" onclick="selectOption(this, '红茶')">
-        <img src="images/categories/006z57zUly1hji0tb4ifij31b31yn4qp.jpg" alt="红茶" loading="lazy" onerror="this.src='static/images/占位图.png'">
-        <span>红茶</span>
-    </div>
     <div class="option-item" onclick="selectOption(this, '姜茶')">
-        <img src="images/categories/006z57zUly1hkeep7v7l0j323w35se85.jpg" alt="姜茶" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/drinks/jcc.jpg" alt="姜茶" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>姜茶</span>
     </div>
     <div class="option-item" onclick="selectOption(this, '美式')">
-        <img src="images/categories/006z57zUly1hkeep06511j31zs2znhdw.jpg" alt="美式" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/drinks/m.png" alt="美式" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>美式</span>
     </div>
+    <div class="option-item" onclick="selectOption(this, '红茶')">
+        <img src="images/drinks/h.png" alt="红茶" loading="lazy" onerror="this.src='images/beijing.png'">
+        <span>红茶</span>
+    </div>
+    
+    <div class="option-item" onclick="selectOption(this, '果茶')">
+        <img src="images/drinks/g.png" alt="果茶" loading="lazy" onerror="this.src='images/beijing.png'">
+        <span>果茶</span>
+    </div>
+    <div class="option-item" onclick="selectOption(this, '绿茶')">
+        <img src="images/drinks/l.png" alt="绿茶" loading="lazy" onerror="this.src='images/beijing.png'">
+        <span>绿茶</span>
+    </div>
+
 </div>
 
 <div class="selected-area">
@@ -116,11 +122,9 @@
 
 <!-- 音效 -->
 <audio id="clickSound" preload="auto" style="display: none;">
-    <source src="audio/click.mp3" type="audio/mpeg">
+    <source src="audio/click.MP3" type="audio/mpeg">
 </audio>
 
-<!-- 隐私提示 -->
-<div class="privacy-tip">本页面仅在本地存储您的选择信息，不会上传至服务器</div>
 
 <!-- 公共脚本 -->
 <script src="js/storage.js"></script>

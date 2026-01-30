@@ -5,67 +5,259 @@
     <meta charset="UTF-8">
     <title>珍珠宇宙茶饮屋</title>
     <link rel="stylesheet" href="css/app.css">
+    <link rel="icon" href="images/t.ico" type="image/x-icon">
+    
     <style>
+        /* 全局重置（保留你的全局样式优先级） */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 20px 15px;
-            background-image: url('images/drinks/006z57zUgy1hsmoq18vmsj32142ph1ky.jpg');
+            padding: clamp(15px, 3vw, 20px);
+            background: #FFFEE7 url('images/beijing.png') repeat fixed center center;
             background-size: cover;
+            background-image: url('images/feng.png'), url('images/beijing.png');
+            background-size: auto 100vh, cover;
             background-position: center;
-            background-repeat: no-repeat;
+            background-repeat: no-repeat, repeat;
             background-attachment: fixed;
+            min-height: 100vh;
+            cursor: pointer;
+            padding-bottom: 40px; 
+            justify-content: flex-end;
+        }
+
+        .btn-wrapper {
+            position: relative;
+            width: 80%;
+            max-width: 400px;
+            margin-top: auto;
+            margin-bottom: 20px; 
+            z-index: 5;
         }
 
         .start-btn {
-            background: rgba(135, 206, 235, 0.9);
+            background: #CB967B;
             color: white;
-            font-size: 18px;
+            font-size: clamp(16px, 4vw, 20px);
             min-height: 48px;
-            min-width: 200px;
-            padding: 15px 40px;
-            border-radius: 8px;
+            width: 100%;
+            padding: 15px 5%;
+            border: none;
+            border-radius: 25px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: none;
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* 核心修改：图标组定位到按钮右上方 */
+        .icon-group {
+            position: absolute;
+            top: -40px;        /* 按钮上方40px（垂直位置不变） */
+            right: 10px;       /* 按钮右侧10px（原left改为right） */
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            z-index: 10; 
+            pointer-events: none;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 功能图标通用样式：保留隔离效果 */
+        .func-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #CB967B;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.2s ease;
+            pointer-events: auto;
+            border: none;
+            outline: none;
+            user-select: none;
+        }
+        .func-icon:hover {
+            transform: scale(1.05);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+        }
+        .func-icon:active {
+            transform: scale(0.95);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        /* 新增：图片图标样式，确保居中显示 */
+        .func-icon img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            pointer-events: none;
+            /* 图片加载失败时的兜底样式 */
+            color: white;
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 16px;
+            font-size: 14px;
+            color: #000000;
+            z-index: 9999;
+            display: none;
+            white-space: nowrap;
+            background-color: transparent;
         }
     </style>
 </head>
 <body>
-<!-- 加载弹窗 -->
-<div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-spinner"></div>
-</div>
+    <!-- 提示弹窗 -->
+    <div class="toast" id="toast"></div>
 
-<!-- 提示弹窗 -->
-<div class="toast" id="toast"></div>
+    <!-- 背景音乐：修复未闭合的标签（核心问题1） -->
+    <audio id="bgAudio" preload="auto" loop>
+        <source src="audio/ScreenRecording_01-26-2026 13-30-19_1-2 (1).mp3" type="audio/mpeg">
+        您的浏览器不支持音频播放
+    </audio>
 
-<button class="start-btn" onclick="goToStep1()">开始定制</button>
+    <!-- 按钮容器：正常显示按钮和图标 -->
+    <div class="btn-wrapper">
+        <div class="icon-group">
+            <!-- 音频播放/暂停图标（优化图片文件名，去掉特殊字符） -->
+            <div class="func-icon" id="audioIcon" title="播放/暂停背景音乐">
+                <img src="images/音乐-暂停.png" alt="播放音乐" id="audioIconInner">
+            </div>
+            <!-- 餐车跳转图标（简化文件名） -->
+            <div class="func-icon" id="cartIcon" title="前往餐车页面">
+                <img src="images/购物车.png" alt="前往餐车">
+            </div>
+        </div>
+        <!-- 开始定制按钮 -->
+        <button class="start-btn" id="startBtn">开始定制</button>
+    </div>
 
-<!-- 音效 -->
-<audio id="clickSound" preload="auto" style="display: none;">
-    <source src="audio/click.mp3" type="audio/mpeg">
-</audio>
+    <!-- 点击音效：修复未闭合的标签（核心问题1） -->
+    <audio id="clickSound" preload="auto" style="display: none;">
+        <source src="audio/click.MP3" type="audio/mpeg">
+    </audio>
 
-<!-- 隐私提示 -->
-<div class="privacy-tip">本页面仅在本地存储您的选择信息，不会上传至服务器</div>
+    <!-- 公共脚本 -->
+    <script src="js/storage.js"></script>
+    <script src="js/common.js"></script>
 
-<!-- 公共脚本 -->
-<script src="js/storage.js"></script>
-<script src="js/common.js"></script>
-<script src="js/components.js"></script>
-<script src="js/logger.js"></script>
+    <script>
+        // 音频相关变量
+        const bgAudio = document.getElementById('bgAudio');
+        const startBtn = document.getElementById('startBtn');
+        const toast = document.getElementById('toast');
+        const audioIcon = document.getElementById('audioIcon'); 
+        const audioIconInner = document.getElementById('audioIconInner');
+        const cartIcon = document.getElementById('cartIcon'); 
+        let isAudioPlaying = false;
+        let hasUserInteracted = false;
 
-<script>
-    // 页面跳转至第一步
-    function goToStep1() {
-        navigateTo('step1.html');
-    }
+        // 更新音频图标显示状态（适配简化后的图片文件名）
+        function updateAudioIcon() {
+            if (!audioIconInner) return;
+            audioIconInner.src = isAudioPlaying ? "images/Player, pause.png" : "images/音乐-暂停.png";
+            audioIconInner.alt = isAudioPlaying ? "暂停音乐" : "播放音乐"; 
+        }
 
-    // 页面加载完成后绑定音效
-    window.addEventListener('DOMContentLoaded', function() {
-        bindSoundToAllButtons();
-    });
-</script>
+        function showToast(text, duration = 2000) {
+            const btnRect = startBtn.getBoundingClientRect();
+            const toastTop = btnRect.bottom + window.scrollY + 10;
+            
+            toast.textContent = text;
+            toast.style.top = `${toastTop}px`;
+            toast.style.display = 'block';
+            
+            clearTimeout(toast.timer);
+            toast.timer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, duration);
+        }
+
+        // 音频播放/暂停切换
+        function toggleAudio() {
+            hasUserInteracted = true;
+            if (isAudioPlaying) {
+                bgAudio.pause();
+                isAudioPlaying = false;
+                showToast('背景音乐已暂停');
+                updateAudioIcon();
+            } else {
+                bgAudio.play()
+                    .then(() => {
+                        isAudioPlaying = true;
+                        showToast('背景音乐已播放');
+                        updateAudioIcon();
+                    })
+                    .catch(() => {
+                        showToast('点击页面解锁音频后再试');
+                        updateAudioIcon();
+                    });
+            }
+        }
+
+        // 页面点击切换音频
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.toast') && 
+                !e.target.closest('.start-btn') && 
+                !e.target.closest('.func-icon')) { 
+                toggleAudio();
+            }
+        });
+
+        // 音频图标点击事件
+        audioIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            toggleAudio();
+        });
+
+        // 餐车图标点击事件
+        cartIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            window.location.href = 'cart.html';
+        });
+
+        // 开始定制按钮点击事件：仅跳转
+        startBtn.addEventListener('click', () => {
+            navigateTo('step1.html');
+        });
+
+        // 页面初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            showToast('点击页面播放背景音乐', 3000);
+            updateAudioIcon();
+        });
+
+        // 监听窗口滚动/resize，确保弹窗位置
+        window.addEventListener('scroll', () => {
+            if (toast.style.display === 'block') {
+                const btnRect = startBtn.getBoundingClientRect();
+                toast.style.top = `${btnRect.bottom + window.scrollY + 10}px`;
+            }
+        });
+        window.addEventListener('resize', () => {
+            if (toast.style.display === 'block') {
+                const btnRect = startBtn.getBoundingClientRect();
+                toast.style.top = `${btnRect.bottom + window.scrollY + 10}px`;
+            }
+        });
+    </script>
 </body>
 </html>

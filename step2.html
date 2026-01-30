@@ -5,32 +5,37 @@
     <meta charset="UTF-8">
     <title>请选择加料 - 珍珠宇宙茶饮屋</title>
     <link rel="stylesheet" href="css/app.css">
+    <link rel="icon" href="images/t.ico" type="image/x-icon">
     <style>
         body {
             padding-bottom: 200px;
             padding-left: 10px;
             padding-right: 10px;
-            padding-top: 64px;
+            padding-top: 40px;
             margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
         }
-        .title-img-container {
-            display: flex;
-            align-items: center;
-            margin: 30px 0 5px 0;
-        }
-        .title-top-img {
-            width: 64px;
-            height: 64px;
-            object-fit: contain;
-        }
-        .title-extra-img {
-            width: 54px;
-            height: 54px;
-            object-fit: contain;
-            border-radius: 8px;
-            margin-left: 265px;
-        }
+.title-img-container {
+    display: flex;
+    align-items:flex-start; 
+    justify-content: space-between;
+    width: 100%;
+    margin: 30px 0 5px 0;
+    padding: 0 5px;
+}
+
+.title-extra-img {
+    width: 102px; 
+    height: 102px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-top: -16px; 
+}
+.title-top-img {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+}
         .step-title {
             text-align: left;
             font-size: 18px;
@@ -80,55 +85,55 @@
 
 
 <div class="title-img-container">
-    <img src="images/math/数字2.png" alt="标题上方图片" class="title-top-img" loading="lazy" onerror="this.src='static/images/占位图.png'">
-    <img src="images/math/015_双鱼座.png" alt="附加图标" class="title-extra-img" loading="lazy" onerror="this.src='static/images/占位图.png'">
+    <img src="images/math/数字2.png" alt="标题上方图片" class="title-top-img" loading="lazy" onerror="this.src='images/beijing.png'">
+    <img src="images/logoo.png" alt="附加图标" class="title-extra-img" loading="lazy" onerror="this.src='images/beijing.png'">
 </div>
 
 <div class="step-title">请选择加料 🍬（可多选）</div>
 
 <div class="option-grid">
     <div class="option-item" onclick="toggleOption(this, '珍珠')">
-        <img src="images/categories/006z57zUly1hkeep7v7l0j323w35se85.jpg" alt="珍珠" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/categories/zhenzhu.jpg" alt="珍珠" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>珍珠</span>
     </div>
     <div class="option-item" onclick="toggleOption(this, '爆爆珠')">
-        <img src="images/categories/006z57zUly1hkmixuig50j320w31chdv.jpg" alt="爆爆珠" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/categories/bbzhu.jpg" alt="爆爆珠" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>爆爆珠</span>
     </div>
     <div class="option-item" onclick="toggleOption(this, '椰果')">
-        <img src="images/categories/006z57zUly1hkeep7v7l0j323w35se85.jpg" alt="椰果" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/categories/yeguo.jpg" alt="椰果" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>椰果</span>
     </div>
     <div class="option-item" onclick="toggleOption(this, '布丁')">
-        <img src="images/categories/006z57zUly1hkmixuig50j320w31chdv.jpg" alt="布丁" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/categories/buding.jpg" alt="布丁" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>布丁</span>
     </div>
     <div class="option-item" onclick="toggleOption(this, '芋圆')">
-        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="芋圆" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/categories/yuyuan.jpg" alt="芋圆" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>芋圆</span>
     </div>
     <div class="option-item" onclick="toggleOption(this, '芋泥')">
-        <img src="images/categories/006z57zUly1hkmixuig50j320w31chdv.jpg" alt="芋泥" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/categories/yuni.jpg" alt="芋泥" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>芋泥</span>
     </div>
     <div class="option-item" onclick="toggleOption(this, '木薯')">
-        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="木薯" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/categories/mushu.jpg" alt="木薯" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>木薯</span>
     </div>
     <div class="option-item" onclick="toggleOption(this, '冰淇淋')">
-        <img src="images/categories/006z57zUly1hkmixuig50j320w31chdv.jpg" alt="冰淇淋" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/categories/bqlin.jpg" alt="冰淇淋" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>冰淇淋</span>
     </div>
     <div class="option-item" onclick="toggleOption(this, '奶盖')">
-        <img src="images/categories/006z57zUly1hkmixuig50j320w31chdv.jpg" alt="奶盖" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/categories/naigai.jpg" alt="奶盖" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>奶盖</span>
     </div>
     <div class="option-item" onclick="toggleOption(this, '红豆')">
-        <img src="images/categories/006z57zUly1hkmixuig50j320w31chdv.jpg" alt="红豆" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/categories/hongdouu.jpg" alt="红豆" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>红豆</span>
     </div>
     <div class="option-item" onclick="toggleOption(this, '红糖')">
-        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="红糖" loading="lazy" onerror="this.src='static/images/占位图.png'">
+        <img src="images/categories/ht.jpg" alt="红糖" loading="lazy" onerror="this.src='images/beijing.png'">
         <span>红糖</span>
     </div>
 </div>
@@ -144,7 +149,7 @@
 
 <!-- 音效 -->
 <audio id="clickSound" preload="auto" style="display: none;">
-    <source src="audio/click.mp3" type="audio/mpeg">
+    <source src="audio/click.MP3" type="audio/mpeg">
 </audio>
 
 

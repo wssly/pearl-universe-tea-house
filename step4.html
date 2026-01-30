@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>请选择杯型/冰度 - 珍珠宇宙茶饮屋</title>
     <link rel="stylesheet" href="css/app.css">
+    <link rel="icon" href="images/t.ico" type="image/x-icon">
     <style>
         * {
             margin: 0;
@@ -22,9 +23,10 @@
             align-items: center;
             justify-content: space-between;
             padding: 0 15px;
-            background: transparent;
+            background: rgba(255,255,255,0.8); 
+            backdrop-filter: blur(2px); 
             z-index: 999;
-            backdrop-filter: blur(2px);
+            border-bottom: 1px solid #eee; 
         }
         .nav-back {
             width: 30px;
@@ -51,13 +53,9 @@
             padding-bottom: 200px;
             padding-left: 10px;
             padding-right: 10px;
-            padding-top: 10px;
+            padding-top: 40px;
         }
-        .title-top-img {
-            width: 54px;
-            height: 54px;
-            object-fit: contain;
-        }
+
         .step-title {
             text-align: left;
             font-size: 18px;
@@ -66,31 +64,49 @@
             font-weight: 600;
             padding-left: 0;
         }
-        /* 统一选项网格布局 - 固定3列 */
+        /* 核心修改：保证列宽统一+对齐+自适应间距 */
         .option-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            justify-items: center;
+            grid-template-columns: repeat(3, minmax(80px, 1fr)); /* 统一列宽基准 */
+            gap: clamp(10px, 3vw, 20px); /* 自适应间距 */
+            justify-items: center; /* 选项在列中居中 */
+            justify-content: center; /* 网格整体居中 */
+            align-items: start; /* 网格顶部对齐，避免垂直偏移 */
             padding: 0 10px;
             margin-bottom: 15px;
+            width: 100%;
         }
+        /* 优化选项样式：保证宽度统一，内部内容居中 */
         .option-item {
+            width: 100%; /* 选项宽度=列宽，确保对齐 */
             max-width: 120px;
             min-height: 130px;
-        }
-        .title-extra-img {
-            width: 64px;
-            height: 64px;
-            object-fit: contain;
-            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         .title-img-container {
-            display: flex;
-            align-items: center;
-            gap: 265px;
-            margin: 30px 0 5px 0;
-        }
+    display: flex;
+    align-items:flex-start; 
+    justify-content: space-between;
+    width: 100%;
+    margin: 30px 0 5px 0;
+    padding: 0 5px;
+}
+
+.title-extra-img {
+    width: 102px; 
+    height: 102px; 
+    object-fit: contain;
+    border-radius: 8px;
+    margin-top: -16px; 
+}
+.title-top-img {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+}
         .prev-btn, .confirm-btn {
             min-height: 50px;
             padding: 10px 20px;
@@ -117,212 +133,242 @@
     </style>
 </head>
 <body>
-<!-- 加载弹窗 -->
-<div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-spinner"></div>
-</div>
-
-<!-- 提示弹窗 -->
-<div class="toast" id="toast"></div>
-
-
-
-<div class="title-img-container">
-    <img src="images/math/数字4%20(2).png" alt="标题上方图片" class="title-top-img">
-    <img src="images/math/015_双鱼座.png" alt="附加图标" class="title-extra-img">
-</div>
-
-<div class="step-title">请选择杯型 🥤（必选）</div>
-<div class="option-grid" id="cupGrid">
-    <div class="option-item" onclick="selectOption('cup', this, '宝宝杯')">
-        <img src="images/categories/006z57zUly1hkmixuig50j320w31chdv.jpg" alt="宝宝杯" onerror="this.src='static/images/占位图.png'">
-        <span>宝宝杯</span>
+    <!-- 加载弹窗 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
     </div>
-    <div class="option-item" onclick="selectOption('cup', this, '大王杯')">
-        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="大王杯" onerror="this.src='static/images/占位图.png'">
-        <span>大王杯</span>
+
+    <!-- 提示弹窗 -->
+    <div class="toast" id="toast"></div>
+
+    <div class="title-img-container">
+        <img src="images/math/数字4%20(2).png" alt="标题上方图片" class="title-top-img">
+        <img src="images/logoo.png" alt="附加图标" class="title-extra-img">
     </div>
-    <!-- 空白占位列，确保3列布局 -->
-    <div class="option-item" style="visibility: hidden;"></div>
-</div>
 
-<div class="step-title">请选择冰度 ❄️（必选）</div>
-<div class="option-grid" id="iceGrid">
-    <div class="option-item" onclick="selectOption('ice', this, '热')">
-        <img src="images/categories/006z57zUly1hkmixuig50j320w31chdv.jpg" alt="热" onerror="this.src='static/images/占位图.png'">
-        <span>热</span>
+    <div class="step-title">请选择杯型 🥤（必选）</div>
+    <div class="option-grid" id="cupGrid">
+        <div class="option-item" onclick="selectOption('cup', this, '宝宝杯')">
+            <img src="images/icons/babyb.jpg" alt="宝宝杯" onerror="this.src='images/beijing.png'">
+            <span>宝宝杯</span>
+        </div>
+        <div class="option-item" onclick="selectOption('cup', this, '大王杯')">
+            <img src="images/icons/dawb.jpg" alt="大王杯" onerror="this.src='images/beijing.png'">
+            <span>大王杯</span>
+        </div>
+        <!-- 优化空白占位项：与实际选项结构一致，保证网格列宽计算准确 -->
+        <div class="option-item" style="visibility: hidden; height: 130px;">
+            <img src="" alt="" style="width: 110px; height: 110px; border-radius: 50%;">
+            <span>&nbsp;</span>
+        </div>
     </div>
-    <div class="option-item" onclick="selectOption('ice', this, '常温')">
-        <img src="images/categories/006z57zUly1gph9cjr7cvj32tc4801l7.jpg" alt="常温" onerror="this.src='static/images/占位图.png'">
-        <span>常温</span>
+
+    <div class="step-title">请选择冰度 ❄️（必选）</div>
+    <div class="option-grid" id="iceGrid">
+        <div class="option-item" onclick="selectOption('ice', this, '热')">
+            <img src="images/icons/hot.jpg" alt="热" onerror="this.src='images/beijing.png'">
+            <span>热</span>
+        </div>
+        <div class="option-item" onclick="selectOption('ice', this, '常温')">
+            <img src="images/icons/normal.jpg" alt="常温" onerror="this.src='images/beijing.png'">
+            <span>常温</span>
+        </div>
+        <div class="option-item" onclick="selectOption('ice', this, '冰')">
+            <img src="images/icons/ice.jpg" alt="冰" onerror="this.src='images/beijing.png'">
+            <span>冰</span>
+        </div>
     </div>
-    <div class="option-item" onclick="selectOption('ice', this, '冰')">
-        <img src="images/categories/006z57zUly1hkmixuig50j320w31chdv.jpg" alt="冰" onerror="this.src='static/images/占位图.png'">
-        <span>冰</span>
+
+    <div class="selected-area">
+        <div class="selected-text" id="selectedText">已选：无</div>
     </div>
-</div>
 
-<!-- 已选区域 -->
-<div class="selected-area">
-    <div class="selected-text" id="selectedText">已选：无</div>
-</div>
+    <div class="footer-bar">
+        <button class="prev-btn" onclick="navigateTo('step3.html')">上一步</button>
+        <button class="confirm-btn" id="confirmBtn" onclick="confirmCustom()" disabled>确认定制</button>
+    </div>
 
-<div class="footer-bar">
-    <button class="prev-btn" onclick="navigateTo('step3.html')">上一步</button>
-    <button class="confirm-btn" id="confirmBtn" onclick="confirmCustom()" disabled>确认定制</button>
-</div>
+    <!-- 音效 -->
+    <audio id="clickSound" preload="auto" style="display: none;">
+        <source src="audio/click.MP3" type="audio/mpeg">
+    </audio>
 
-<!-- 音效 -->
-<audio id="clickSound" preload="auto" style="display: none;">
-    <source src="audio/click.mp3" type="audio/mpeg">
-</audio>
+    <!-- 公共脚本 -->
+    <script src="js/storage.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/logger.js"></script>
 
-<!-- 公共脚本 -->
-<script src="js/storage.js"></script>
-<script src="js/common.js"></script>
-<script src="js/components.js"></script>
-<script src="js/logger.js"></script>
+    <script>
+        let selections = {
+            cup: "",
+            ice: ""
+        };
 
-<script>
-    let selections = {
-        cup: "",
-        ice: ""
-    };
-    // 存储前3步累计数据
-    let selectedBase = "";    // step1 杯底
-    let selectedToppings = [];// step2 加料
-    let selectedSugar = "";   // step3 糖度
+        let selectedBase = "";    
+        let selectedToppings = [];
+        let selectedSugar = "";   
 
-    // 选择杯型/冰度
-    function selectOption(type, item, name) {
-        const gridId = `${type}Grid`;
-        const grid = document.getElementById(gridId);
-        grid.querySelectorAll(".option-item").forEach(i => i.classList.remove("selected"));
-        item.classList.add("selected");
-        selections[type] = name;
+        function selectOption(type, item, name) {
+            const gridId = `${type}Grid`;
+            const grid = document.getElementById(gridId);
+            grid.querySelectorAll(".option-item").forEach(i => i.classList.remove("selected"));
+            item.classList.add("selected");
+            selections[type] = name;
 
-        // 保存选择
-        saveSelections();
-        // 更新已选文本
-        updateSelectedText();
-        // 检查确认按钮状态
-        checkConfirmStatus();
-    }
-
-    // 恢复选中状态
-    function restoreSelected(type, name) {
-        const gridId = `${type}Grid`;
-        const grid = document.getElementById(gridId);
-        if (!grid) return;
-
-        const targetItem = Array.from(grid.querySelectorAll(".option-item")).find(
-            el => el.querySelector("span").textContent === name
-        );
-        if (targetItem) targetItem.classList.add("selected");
-    }
-
-    // 保存选择到本地存储
-    function saveSelections() {
-        let drink = Storage.get("customDrink") || {};
-        drink.cup = selections.cup;
-        drink.ice = selections.ice;
-        Storage.set("customDrink", drink);
-    }
-
-    // 检查确认按钮状态
-    function checkConfirmStatus() {
-        const isAllSelected = selections.cup && selections.ice;
-        document.getElementById("confirmBtn").disabled = !isAllSelected;
-    }
-
-    // 更新已选文本
-    function updateSelectedText() {
-        let textParts = [];
-        // 按 step1→step2→step3→step4 顺序拼接
-        if (selectedBase) textParts.push(`杯底：${escapeHtml(selectedBase)}`);
-        if (selectedToppings.length > 0) textParts.push(`加料：${selectedToppings.map(t => escapeHtml(t)).join("、")}`);
-        if (selectedSugar) textParts.push(`糖度：${escapeHtml(selectedSugar)}`);
-        if (selections.cup) textParts.push(`杯型：${escapeHtml(selections.cup)}`);
-        if (selections.ice) textParts.push(`冰度：${escapeHtml(selections.ice)}`);
-
-        // 统一显示逻辑
-        const text = textParts.length > 0 ? textParts.join(" | ") : "已选：无";
-        document.getElementById("selectedText").innerText = text;
-    }
-
-    // 确认定制
-    function confirmCustom() {
-        if (!selections.cup || !selections.ice) return;
-
-        let drink = Storage.get("customDrink") || {};
-        drink.cup = selections.cup;
-        drink.ice = selections.ice;
-        Storage.set("customDrink", drink);
-
-        // 黑暗料理校验逻辑
-        let isDark = false;
-        const base = drink.base || "";
-        const toppings = Array.isArray(drink.toppings) ? drink.toppings : [];
-
-        // 美式仅允许特定加料
-        const americanAllowedToppings = ["珍珠", "椰果", "布丁"];
-        if (base === "美式" && toppings.length > 0) {
-            const hasForbiddenTopping = toppings.some(t => !americanAllowedToppings.includes(t));
-            if (hasForbiddenTopping) isDark = true;
-        }
-
-        // 绿茶/红茶+木薯 = 黑暗料理
-        if (!isDark && ["绿茶", "红茶"].includes(base) && toppings.includes("木薯")) isDark = true;
-
-        // 果茶禁止特定加料
-        const fruitTeaForbiddenToppings = ["布丁", "芋泥", "木薯", "红豆"];
-        if (!isDark && base === "果茶") {
-            const hasForbiddenTopping = toppings.some(t => fruitTeaForbiddenToppings.includes(t));
-            if (hasForbiddenTopping) isDark = true;
-        }
-
-        // 姜茶仅允许红糖
-        const gingerTeaAllowedToppings = ["红糖"];
-        if (!isDark && base === "姜茶" && toppings.length > 0) {
-            const hasForbiddenTopping = toppings.some(t => !gingerTeaAllowedToppings.includes(t));
-            if (hasForbiddenTopping) isDark = true;
-        }
-
-        // 加料超过6种
-        if (!isDark && toppings.length > 6) isDark = true;
-
-        // 跳转到结果页
-        navigateTo(`result.html?status=${isDark ? 'fail' : 'success'}`);
-    }
-
-    // 初始化
-    document.addEventListener('DOMContentLoaded', function() {
-        // 读取本地存储数据
-        const drink = Storage.get("customDrink");
-        if (drink) {
-            // 读取前3步数据
-            selectedBase = drink.base || "";
-            selectedToppings = Array.isArray(drink.toppings) ? drink.toppings : [];
-            selectedSugar = drink.sugar || "";
-
-            // 读取当前步骤数据
-            if (drink.cup) {
-                selections.cup = drink.cup;
-                restoreSelected('cup', drink.cup);
-            }
-            if (drink.ice) {
-                selections.ice = drink.ice;
-                restoreSelected('ice', drink.ice);
-            }
-
-            // 更新状态
-            checkConfirmStatus();
+            // 保存选择
+            saveSelections();
+            // 更新已选文本
             updateSelectedText();
+            // 检查确认按钮状态
+            checkConfirmStatus();
         }
 
-        // 绑定音效
-        bindSoundToAllButtons();
-    });
-</script>
+        // 恢复选中状态
+        function restoreSelected(type, name) {
+            const gridId = `${type}Grid`;
+            const grid = document.getElementById(gridId);
+            if (!grid) return;
+
+            const targetItem = Array.from(grid.querySelectorAll(".option-item")).find(
+                el => el.querySelector("span").textContent === name
+            );
+            if (targetItem) targetItem.classList.add("selected");
+        }
+
+        function handleAction() {
+  try { 
+    // 先播放点击音效
+    const clickSound = document.getElementById('clickSound');
+    if (clickSound) {
+      clickSound.currentTime = 0;
+      clickSound.play().catch(e => console.log('点击音效播放失败：', e));
+    }
+    // 再执行跳转
+    if (status === 'success') {
+      typeof navigateTo === 'function' ? navigateTo("customize.html") : window.location.href = "/customize.html";
+    } else {
+      clearCustomData();
+      typeof navigateTo === 'function' ? navigateTo("index.html") : window.location.href = "/index.html";
+    }
+  } catch (e) {
+    console.log('按钮点击逻辑报错：', e);
+  }
+}
+
+        // 保存选择到本地存储
+        function saveSelections() {
+            let drink = Storage.get("customDrink") || {};
+            drink.cup = selections.cup;
+            drink.ice = selections.ice;
+            Storage.set("customDrink", drink);
+        }
+
+        // 检查确认按钮状态
+        function checkConfirmStatus() {
+            const isAllSelected = selections.cup && selections.ice;
+            document.getElementById("confirmBtn").disabled = !isAllSelected;
+        }
+
+        // 更新已选文本
+        function updateSelectedText() {
+            let textParts = [];
+            // 按 step1→step2→step3→step4 顺序拼接
+            if (selectedBase) textParts.push(`杯底：${escapeHtml(selectedBase)}`);
+            if (selectedToppings.length > 0) textParts.push(`加料：${selectedToppings.map(t => escapeHtml(t)).join("、")}`);
+            if (selectedSugar) textParts.push(`糖度：${escapeHtml(selectedSugar)}`);
+            if (selections.cup) textParts.push(`杯型：${escapeHtml(selections.cup)}`);
+            if (selections.ice) textParts.push(`冰度：${escapeHtml(selections.ice)}`);
+
+            // 统一显示逻辑
+            const text = textParts.length > 0 ? textParts.join(" | ") : "已选：无";
+            document.getElementById("selectedText").innerText = text;
+        }
+
+        // 确认定制
+        // 确认定制
+function confirmCustom() {
+    if (!selections.cup || !selections.ice) return;
+    
+    // 播放确认音效
+    const confirmSound = document.getElementById('clickSound');
+    if (confirmSound) {
+        confirmSound.currentTime = 0;
+        confirmSound.play().catch(e => console.log('确认音效播放失败:', e));
+    }
+    
+    let drink = Storage.get("customDrink") || {};
+    drink.cup = selections.cup;
+    drink.ice = selections.ice;
+    Storage.set("customDrink", drink);
+    
+    // 黑暗料理校验逻辑
+    let isDark = false;
+    const base = drink.base || "";
+    const toppings = Array.isArray(drink.toppings) ? drink.toppings : [];
+    
+    // 美式仅允许特定加料
+    const americanAllowedToppings = ["珍珠", "椰果", "布丁"];
+    if (base === "美式" && toppings.length > 0) {
+        const hasForbiddenTopping = toppings.some(t => !americanAllowedToppings.includes(t));
+        if (hasForbiddenTopping) isDark = true;
+    }
+    
+    // 绿茶/红茶+木薯 = 黑暗料理
+    if (!isDark && ["绿茶", "红茶"].includes(base) && toppings.includes("木薯")) isDark = true;
+    
+    // 果茶禁止特定加料
+    const fruitTeaForbiddenToppings = ["布丁", "芋泥", "木薯", "红豆"];
+    if (!isDark && base === "果茶") {
+        const hasForbiddenTopping = toppings.some(t => fruitTeaForbiddenToppings.includes(t));
+        if (hasForbiddenTopping) isDark = true;
+    }
+    
+    // 姜茶仅允许红糖
+    const gingerTeaAllowedToppings = ["红糖"];
+    if (!isDark && base === "姜茶" && toppings.length > 0) {
+        const hasForbiddenTopping = toppings.some(t => !gingerTeaAllowedToppings.includes(t));
+        if (hasForbiddenTopping) isDark = true;
+    }
+    
+    // 加料超过6种
+    if (!isDark && toppings.length > 6) isDark = true;
+    
+    // 标记用户已经交互（用于结果页面音频播放）
+    sessionStorage.setItem('userInteracted', 'true');
+    
+    // 跳转到结果页
+    navigateTo(`result.html?status=${isDark ? 'fail' : 'success'}`);
+}
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 读取本地存储数据
+            const drink = Storage.get("customDrink");
+            if (drink) {
+                // 读取前3步数据
+                selectedBase = drink.base || "";
+                selectedToppings = Array.isArray(drink.toppings) ? drink.toppings : [];
+                selectedSugar = drink.sugar || "";
+
+                // 读取当前步骤数据
+                if (drink.cup) {
+                    selections.cup = drink.cup;
+                    restoreSelected('cup', drink.cup);
+                }
+                if (drink.ice) {
+                    selections.ice = drink.ice;
+                    restoreSelected('ice', drink.ice);
+                }
+
+                // 更新状态
+                checkConfirmStatus();
+                updateSelectedText();
+            }
+
+            // 绑定音效
+            bindSoundToAllButtons();
+        });
+    </script>
 </body>
 </html>
