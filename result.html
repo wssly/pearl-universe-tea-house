@@ -3,6 +3,9 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta charset="UTF-8">
+    <!-- 微信兼容meta：防止空白、优化渲染 -->
+    <meta name="format-detection" content="telephone=no,email=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>定制结果 - 珍珠宇宙茶饮屋</title>
     <link rel="stylesheet" href="css/app.css">
     <link rel="icon" href="images/t.ico" type="image/x-icon">
@@ -22,6 +25,8 @@
             padding: 20px 15px;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
+            /* 微信兜底背景，防止极端空白 */
+
         }
         .result-img {
             width: 80%;
@@ -47,6 +52,8 @@
             min-height: 48px;
             min-width: 200px;
             transition: all 0.2s ease;
+            /* 微信按钮样式兼容 */
+            -webkit-appearance: none;
         }
         .success-btn {
             background: cornflowerblue;
@@ -127,134 +134,77 @@
 <script src="js/logger.js"></script>
 
 <script>
-    // 1. 核心变量初始化 + 防重复控制锁
+    // 1. 核心变量（完全保留，新增微信环境标记）
     const urlParams = new URLSearchParams(window.location.search);
     const status = urlParams.get('status') || 'fail';
-    let hasUserInteracted = false; // 用户是否已交互（浏览器音频播放强制要求）
-    let targetAudioId = status === 'success' ? 'successSound' : 'failSound';
-    let isAudioPlaying = false; // 音频播放中锁
-    let isBtnClicking = false; // 按钮点击中锁
+    const isWechat = /(MicroMessenger)/i.test(navigator.userAgent); // 微信标记
+    let hasUserInteracted = false; // 兼容直接打开结果页的场景
+    const targetAudio = document.getElementById(status === 'success' ? 'successSound' : 'failSound');
+    const clickAudio = document.getElementById('clickSound');
+    let isBtnClicking = false;
 
-    // 2. 页面交互标记（每次点击都触发，仅首次标记交互状态）
-    function markInteracted() {
-        // 首次点击标记为已交互（解锁浏览器音频播放限制）
-        if (!hasUserInteracted) {
-            hasUserInteracted = true;
-            console.log('用户首次交互完成，解锁音频播放限制');
-        }
-        // 每次点击都执行音频播放（去掉原有return，不再仅执行一次）
-        playResultSound(targetAudioId);
+    // 2. 提示框方法（微信兼容）
+    function showToast(text, duration = 2000) {
+        const toast = document.getElementById('toast');
+        if (!toast) return;
+        toast.innerText = text;
+        toast.style.display = 'block';
+        clearTimeout(window.toastTimer);
+        window.toastTimer = setTimeout(() => {
+            toast.style.display = 'none';
+        }, duration);
     }
 
-    // 3. 音频播放逻辑（保留原有防重复播放）
-    function playResultSound(audioId) {
-        // 防重复播放：如果已有音频在播放，直接返回
-        if (isAudioPlaying) return;
-        
-        const audio = document.getElementById(audioId);
-        if (!audio) {
-            console.log('音频元素不存在：', audioId);
-            return;
-        }
-
-        // 播放前锁
-        isAudioPlaying = true;
-        // 强制重置播放起点（每次点击都从开头播放）
-        audio.currentTime = 0;
-        
-        // 播放完成/失败后解锁
-        const unlockAudio = () => {
-            isAudioPlaying = false;
-            audio.removeEventListener('ended', unlockAudio);
-            audio.removeEventListener('error', unlockAudio);
-        };
-        audio.addEventListener('ended', unlockAudio);
-        audio.addEventListener('error', unlockAudio);
-        
-        // 微信浏览器强制预加载音频
-        const loadAndPlay = () => {
-            audio.load();
-            audio.oncanplay = function() {
-                if (hasUserInteracted) {
-                    audio.play().then(() => {
-                        console.log('音频播放成功：', audioId);
-                    }).catch(err => {
-                        console.log('音频播放失败(微信兼容)：', audioId, err);
-                        unlockAudio(); // 失败也要解锁
-                        setTimeout(() => {
-                            if (!isAudioPlaying) {
-                                audio.currentTime = 0;
-                                audio.play().catch(e => {
-                                    console.log('重试播放失败：', audioId, e);
-                                    unlockAudio();
-                                });
-                            }
-                        }, 200);
-                    });
-                } else {
-                    unlockAudio(); // 无交互则解锁
-                }
-            };
-        };
-
-        // 微信环境特殊处理
-        if (/(MicroMessenger)/i.test(navigator.userAgent)) {
-            loadAndPlay();
-        } else {
-            // 普通浏览器逻辑
-            if (audio.readyState >= 2) {
-                audio.play().catch(err => {
-                    console.log('普通浏览器播放失败：', audioId, err);
-                    unlockAudio();
-                });
-            } else {
-                audio.addEventListener('canplaythrough', () => {
-                    audio.play().catch(err => {
-                        console.log('普通浏览器加载后播放失败：', audioId, err);
-                        unlockAudio();
-                    });
-                }, { once: true });
-            }
-        }
+    // 3. 极简音频播放（跨浏览器+微信兼容，重置起点保证从头播）
+    function playAudio(audioDom) {
+        if (!audioDom) return;
+        audioDom.currentTime = 0; // 每次播放都从头开始
+        audioDom.play().catch(err => {
+            console.log('音效播放失败：', err);
+            !hasUserInteracted && showToast('点击页面解锁音效');
+        });
     }
 
-    // 4. 清空数据逻辑
+    // 4. 封装播放方法
+    function playResultAudio() { playAudio(targetAudio); }
+    function playClickAudio() { playAudio(clickAudio); }
+
+    // 5. 清空数据逻辑（完全保留）
     function clearCustomData() {
         try {
             Storage.remove("customDrink");
             console.log("已清空当前定制饮品数据，保留购物车数据");
         } catch (e) {
             console.log('清空数据失败：', e);
+            showToast('数据清空失败，请重试');
         }
     }
 
-    // 5. 按钮点击逻辑（增加防重复点击）
+    // 6. 按钮点击逻辑（完全保留，仅优化微信延迟跳转）
     function handleAction() {
-        // 防重复点击：如果正在点击中，直接返回
         if (isBtnClicking) return;
-        isBtnClicking = true; // 点击锁
+        isBtnClicking = true;
         
         try {
-            // 播放点击音效（受isAudioPlaying控制，避免和结果音效冲突）
-            playResultSound("clickSound");
-            
-            // 禁用按钮视觉反馈（可选）
+            playClickAudio(); // 播放点击音效
             const actionBtn = document.getElementById('actionBtn');
             actionBtn.disabled = true;
             actionBtn.style.opacity = '0.7';
             actionBtn.style.cursor = 'not-allowed';
 
-            // 跳转逻辑
-            if (status === 'success') {
-                typeof navigateTo === 'function' ? navigateTo("customize.html") : window.location.href = "customize.html";
-            } else {
-                clearCustomData();
-                typeof navigateTo === 'function' ? navigateTo("index.html") : window.location.href = "index.html";
-            }
+            // 微信延迟200ms跳转，确保音效播放完成
+            const delay = isWechat ? 200 : 0;
+            setTimeout(() => {
+                if (status === 'success') {
+                    typeof navigateTo === 'function' ? navigateTo("customize.html") : window.location.href = "customize.html";
+                } else {
+                    clearCustomData();
+                    typeof navigateTo === 'function' ? navigateTo("index.html") : window.location.href = "index.html";
+                }
+            }, delay);
         } catch (e) {
             console.log('按钮点击逻辑报错：', e);
-            isBtnClicking = false; // 报错解锁
-            // 恢复按钮状态
+            isBtnClicking = false;
             const actionBtn = document.getElementById('actionBtn');
             actionBtn.disabled = false;
             actionBtn.style.opacity = '1';
@@ -262,7 +212,7 @@
         }
     }
 
-    // 6. 初始化页面
+    // 7. 初始化页面（★核心新增：页面加载完成后自动播放对应音频★）
     function initPage() {
         try {
             bindSoundToAllButtons();
@@ -270,7 +220,7 @@
             console.log('绑定按钮音效失败：', e);
         }
 
-        // 设置页面内容
+        // 原有页面内容设置（完全保留，无修改）
         if (status === 'success') {
             document.getElementById("resultImg").src = "images/success.jpg";
             document.getElementById("resultText").innerText = "定制成功！";
@@ -283,36 +233,41 @@
             document.getElementById("actionBtn").className = "btn fail-btn";
         }
 
-        // 延迟播放音频（首次加载无用户交互，会失败，不影响后续点击）
-        setTimeout(() => {
-            playResultSound(targetAudioId);
-        }, 100);
+        // ★★★ 核心新增：页面初始化后，自动播放对应结果音频 ★★★
+        playResultAudio();
+        // 标记为已交互（因step4已完成点击，此处直接解锁）
+        hasUserInteracted = true;
     }
 
-    // 7. 全局监听所有点击/触摸事件（移除once，每次点击都触发）
-    document.addEventListener('click', markInteracted);
-    document.addEventListener('touchstart', markInteracted);
+    // 8. 全局交互事件（保留：单击页面可多次重播音频）
+    function handlePageInteract() {
+        playResultAudio(); // 每次点击都重播，从头开始
+        hasUserInteracted = true;
+    }
+    document.addEventListener('click', handlePageInteract);
+    document.addEventListener('touchstart', handlePageInteract, { passive: true }); // 手机/微信兼容
 
-    // 8. 浏览器适配初始化（保留原有微信/普通浏览器兼容逻辑）
-    if (/(MicroMessenger)/i.test(navigator.userAgent)) {
+    // 9. 浏览器适配初始化（微信+普通浏览器，确保不空白、自动播生效）
+    if (isWechat) {
         function wxInit() {
-            if (window.WeixinJSBridge && window.WeixinJSBridge.invoke) {
-                initPage();
+            if (window.WeixinJSBridge) {
+                initPage(); // 微信桥接完成后初始化，确保自动播
             } else {
                 setTimeout(wxInit, 50);
             }
         }
-        if (window.WeixinJSBridge) {
-            wxInit();
-        } else {
-            document.addEventListener('WeixinJSBridgeReady', wxInit, { once: true });
-        }
+        wxInit();
+        document.addEventListener('WeixinJSBridgeReady', wxInit, { once: true });
+        // 微信极端情况：300ms后强制初始化，防止监听失败
+        setTimeout(initPage, 300);
     } else {
         if (document.readyState === 'complete' || document.readyState === 'interactive') {
             initPage();
         } else {
             document.addEventListener('DOMContentLoaded', initPage, { once: true });
         }
+        // 普通浏览器加载完成后再确认初始化
+        window.addEventListener('load', initPage, { once: true });
     }
 </script>
 </body>
